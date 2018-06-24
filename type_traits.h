@@ -3,16 +3,17 @@
 
 namespace mmm{
 
-//类+值的萃取,每个类型对应一个值. see libc++
-//编译期已计算: constexpr
+/*类+值的萃取,struct integral_constant {static T t;}
+*	 integral_constant wraps a static constant of specified type.
+*	 see libc++
+* 编译期已计算: constexpr 
+*/
 template<typename _Tp, _Tp __v>
 struct integral_constant{
 		static constexpr _Tp                  value = __v;
 		typedef _Tp                           value_type;
 		typedef integral_constant<_Tp, __v>   type; //当前类型.
-		
-		//converts  integral_constant<T, v> to T
-		constexpr operator value_type() const noexcept { return value; }
+		constexpr operator value_type() const noexcept { return value; } //integral_constant<T, v>() 隐式转换为value
 		constexpr value_type operator()() const noexcept { return value; }
 };
 
@@ -284,7 +285,7 @@ struct _type_traits<const signed char*>
 
 
 
-//接口
+/***************************接口******************************/
 
 /*
 template<typename _Tp>
