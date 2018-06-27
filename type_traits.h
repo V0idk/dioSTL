@@ -295,14 +295,18 @@ struct is_pod : public integral_constant<bool, __is_pod(_Tp)>{ }; //__is_pod是�
 //__is_pod是编译期内置的,我们手动实现
 //ex : is_pod<int>::type() 或 is_pod<int>()() [不推荐]; return true_type/false_type
 
-template<typename _Tp>
-struct is_pod : public _type_traits<_Tp>::is_POD_type{ };
+// template<typename _Tp>
+// struct is_pod : public _type_traits<_Tp>::is_POD_type{ };
 
+template<typename _Tp>
+using is_pod = typename _type_traits<_Tp>::is_POD_type::type;
 
 // 整数
-template<typename _Tp>
-struct is_integer : public _type_traits<_Tp>::is_integer_type{ };
+// template<typename _Tp>
+// struct is_integer : public _type_traits<_Tp>::is_integer_type{ };
 
+template<typename _Tp>
+using is_integer = typename _type_traits<_Tp>::is_integer_type::type;
 }//namespace mmm
 
 
