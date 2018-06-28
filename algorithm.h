@@ -27,6 +27,14 @@ OutputIterator fill_n(OutputIterator first, Size n, const T& value) {
 	return first;//返回最后赋值元素后一位置的迭代
 }
 
+
+	template<class ForwardIterator, class T>
+	void fill(ForwardIterator first, ForwardIterator last, const T& value)
+	{
+		for (; first != last; ++first)
+			*first = value;
+	}
+
 /**********distance(it1,it2) 考虑random和forward迭代器 ***********/
 template<class InputIterator>
 iterator_difference_type<InputIterator>
