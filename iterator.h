@@ -61,6 +61,9 @@ using iterator_value_type = typename iterator_traits<Iterator>::value_type;
 template<class Iterator>
 using iterator_category = typename iterator_traits<Iterator>::iterator_category;
 
+//萃取迭代器所属距离
+template<class Iterator>
+using iterator_difference_type = typename iterator_traits<Iterator>::difference_type;
 
 /****************反向迭代器***************/
 //正向迭代器的封装, example: ++ -> --
