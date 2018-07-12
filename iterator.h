@@ -84,7 +84,7 @@ public:
 	ReverseIterator() : current(){}
 	//cppreference: 关系 &*r == &*(i-1) 从而构造自末尾后一位置的迭代器的逆向迭代器解引用到序列的最后元素。
 	explicit ReverseIterator(const Iterator& it) :current(it){
-		auto temp = it;//don't touch it.
+		auto temp = it;//不要修改原it
 		current = --temp;
 	}
 
