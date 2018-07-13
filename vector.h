@@ -175,8 +175,8 @@ class vector{
 	}
 	template<class InputIterator>
 	void insert_aux(iterator position, InputIterator first, InputIterator last, false_type);
-	template<class Integer>
-	void insert_aux(iterator position, Integer n, const value_type& value, true_type);
+
+	void insert_aux(iterator position, size_type n, const value_type& value, true_type);
 	template<class InputIterator>
 	void realloc_insert(iterator position, InputIterator first, InputIterator last);
 	//获取新capacity算法：当超出capacity被调用。若需要的容量不大于当前capacity，则仅仅2*当前，否则当前+需要的；
@@ -236,43 +236,36 @@ typename vector<T, Alloc>::iterator vector<T, Alloc>::erase(iterator first, iter
 	return first;
 }
 
-//当插入导致容量不足时触发 
-template<class T, class Alloc>
-template<class InputIterator>
-void vector<T, Alloc>::realloc_insert(iterator position, InputIterator first, InputIterator last){
-	difference_type newCapacity = get_new_capacity(last - first);
-	T *new_start = allocator_type::allocate(newCapacity);
-	T *new_end_of_storage = new_start + newCapacity;
-	T *new_finish = mmm::uninitialized_copy(begin(), position, new_start);
-	new_finish = mmm::uninitialized_copy(first, last, new_finish);
-	new_finish = mmm::uninitialized_copy(position, end(), new_finish);
-	release_vector();
-	start_ = new_start;
-	finish_ = new_finish;
-	end_of_storage_ = new_end_of_storage;
-}
-
 template<class T, class Alloc>
 template<class InputIterator>
 void vector<T, Alloc>::insert_aux(iterator position, InputIterator first, InputIterator last, false_type) {
 	difference_type need = distance(first, last);
 	if (end_of_storage_ - finish_ >= need){
-		mmm::copy_backward(position,finish_,finish_+need);
+		mmm::copy_backward(position,finish_ ,finish_+need);
 		mmm::copy(first, last, position);
 		finish_ += need;
 	}
 	else{
-		realloc_insert(position, first, last);
+		difference_type newCapacity = get_new_capacity(last - first);
+		auto new_start = allocator_type::allocate(newCapacity);
+		auto new_end_of_storage = new_start + newCapacity;
+		auto new_finish = mmm::uninitialized_copy(begin(), position, new_start);
+		new_finish = mmm::uninitialized_copy(first, last, new_finish);
+		new_finish = mmm::uninitialized_copy(position, end(), new_finish);
+		release_vector();
+		start_ = new_start;
+		finish_ = new_finish;
+		end_of_storage_ = new_end_of_storage;
 	}
 }
 template<class T, class Alloc>
-template<class Integer>
-void vector<T, Alloc>::insert_aux(iterator position, Integer n, const value_type& value, true_type){
+
+void vector<T, Alloc>::insert_aux(iterator position, size_type n, const value_type& value, true_type){
 	difference_type need = n;
 	//enough
 	if (end_of_storage_ - finish_ > need){
 		//后移
-    mmm::copy_backward(position ,finish_ ,finish_+ need);
+    mmm::copy_backward(position,finish_ ,finish_+ need);
 		//填充
 		mmm::uninitialized_fill_n(position, need, value);
 		finish_ += need;
@@ -293,6 +286,7 @@ void vector<T, Alloc>::insert_aux(iterator position, Integer n, const value_type
 		end_of_storage_ = new_end_of_storage;
 	}
 }
+
 
 //***********比较操作: 非成员.*******************
 template<class T, class Alloc>
