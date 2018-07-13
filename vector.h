@@ -7,6 +7,7 @@
 #include "utility.h"
 #include "algorithm.h"
 #include  <initializer_list>
+#include "exception.h"
 namespace mmm{
 /********* vector *************/
 template<class T, class Allocator = allocator<T>>
@@ -108,6 +109,18 @@ class vector{
 	reference back(){ return *(end() - 1); }
 	pointer data(){ return start_; }
 
+	reference at(size_type n) {
+		range_check(n);
+		return (*this)[n];
+	}
+
+
+	const_reference
+	at(size_type n) const {
+		range_check(n);
+		return (*this)[n];
+	}
+
 	//修改器
 	void clear(){
 		mmm::destroy(start_, finish_);
@@ -173,19 +186,26 @@ class vector{
 	void vector_aux(Integer n, const value_type& value, true_type){
 		fill_initialize(n, value);//等价于vector(n,value)
 	}
+
+	void range_check(size_type n) const {
+		if (n >= size())	throw mmm::out_of_range("Out Of Range");
+  }
 	template<class InputIterator>
 	void insert_aux(iterator position, InputIterator first, InputIterator last, false_type);
 
 	void insert_aux(iterator position, size_type n, const value_type& value, true_type);
 	template<class InputIterator>
 	void realloc_insert(iterator position, InputIterator first, InputIterator last);
-	//获取新capacity算法：当超出capacity被调用。若需要的容量不大于当前capacity，则仅仅2*当前，否则当前+需要的；
-	//这样不至于过大。
-	size_type get_new_capacity(size_type len) const {
-		size_type old_capacity = end_of_storage_ - start_;
-		auto res = mmm::max(old_capacity, len);
-		size_type newCapacity = (old_capacity != 0 ? (old_capacity + res) : len);
-		return newCapacity;
+	//若需要的容量不大于当前capacity，则仅仅2*当前，否则当前+需要的. 这样不至于过大。
+	size_type get_new_capacity(size_type need) const {
+		//std::ptrdiff_t is signed. std::size_t is unsigned.
+		size_type cur = end_of_storage_ - start_;
+		if(cur == 0)
+			return need;
+		else if(need > cur)
+			return cur + need;
+		else
+			return cur + cur;
 	}
 };// end of class vector
 
@@ -236,6 +256,8 @@ typename vector<T, Alloc>::iterator vector<T, Alloc>::erase(iterator first, iter
 	return first;
 }
 
+// insert
+// 由于强类型,这两个函数暂时没办法合并重用.
 template<class T, class Alloc>
 template<class InputIterator>
 void vector<T, Alloc>::insert_aux(iterator position, InputIterator first, InputIterator last, false_type) {
