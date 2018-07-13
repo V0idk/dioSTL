@@ -66,11 +66,11 @@ template<class Iterator>
 using iterator_difference_type = typename iterator_traits<Iterator>::difference_type;
 
 /****************反向迭代器***************/
-//正向迭代器的封装, example: ++ -> --
-//ex: ReverseIterator<string::iterator>
+//正向迭代器的封装(适配器), example: ++ -> --
+//ex: reverse_iterator<string::iterator>
 
 template<class Iterator>
-class ReverseIterator
+class reverse_iterator
 {
 public:
 	typedef typename iterator_traits<Iterator>::iterator_category iterator_category;
@@ -81,9 +81,9 @@ public:
 private:
 	Iterator current;
 public:
-	ReverseIterator() : current(){}
+	reverse_iterator() : current(){}
 	//cppreference: 关系 &*r == &*(i-1) 从而构造自末尾后一位置的迭代器的逆向迭代器解引用到序列的最后元素。
-	explicit ReverseIterator(const Iterator& it) :current(it){
+	explicit reverse_iterator(const Iterator& it) :current(it){
 		auto temp = it;//不要修改原it
 		current = --temp;
 	}
@@ -95,21 +95,21 @@ public:
 	// operator-> 重载返回指向T的pointer
 	pointer operator->(){ return &(operator*()); }
 	pointer operator->()const{ return &(operator*()); }
-	ReverseIterator& operator ++(){
+	reverse_iterator& operator ++(){
 		--current;
 		return *this;
 	}
-	ReverseIterator& operator ++(int){
-		ReverseIterator temp = *this;
+	reverse_iterator& operator ++(int){
+		reverse_iterator temp = *this;
 		++(*this);
 		return temp;
 	}
-	ReverseIterator& operator--(){
+	reverse_iterator& operator--(){
 		++current;
 		return *this;
 	}
-	ReverseIterator  operator--(int){
-		ReverseIterator temp = *this;
+	reverse_iterator  operator--(int){
+		reverse_iterator temp = *this;
 		--(*this);
 		return temp;
 	}
@@ -118,46 +118,46 @@ public:
 	}
 
 	//注意二元操作符重载,通常为了两个位置可以互换,会重载一个为成员,一个为friend.
-	ReverseIterator operator + (difference_type n)const{
-		return ReverseIterator(current + n);
+	reverse_iterator operator + (difference_type n)const{
+		return reverse_iterator(current + n);
 	}
-	ReverseIterator& operator += (difference_type n){
+	reverse_iterator& operator += (difference_type n){
 		current -= n;
 		return *this;
 	}
-	ReverseIterator operator - (difference_type n) const {
-		return ReverseIterator(current - n);
+	reverse_iterator operator - (difference_type n) const {
+		return reverse_iterator(current - n);
 	}
-	ReverseIterator& operator -= (difference_type n){
+	reverse_iterator& operator -= (difference_type n){
 		current += n;
 		return *this;
 	}
 public:
 	//若友元声明为模板,可以在类外定义. 否则必须在类内定义, 因为你没办法知道 Iterator在类外是什么.
-	friend bool operator == (const ReverseIterator<Iterator>& lhs, const ReverseIterator<Iterator>& rhs)
+	friend bool operator == (const reverse_iterator<Iterator>& lhs, const reverse_iterator<Iterator>& rhs)
 	{return lhs.current == rhs.current;};
-	friend bool operator != (const ReverseIterator<Iterator>& lhs,const ReverseIterator<Iterator>& rhs) 
+	friend bool operator != (const reverse_iterator<Iterator>& lhs,const reverse_iterator<Iterator>& rhs) 
 	{ return !(lhs == rhs);}
-	friend bool operator < (const ReverseIterator<Iterator>& lhs,const ReverseIterator<Iterator>& rhs)
+	friend bool operator < (const reverse_iterator<Iterator>& lhs,const reverse_iterator<Iterator>& rhs)
 	{ return lhs.current < rhs.current;}
-	friend bool operator <= (const ReverseIterator<Iterator>& lhs, const ReverseIterator<Iterator>& rhs)
+	friend bool operator <= (const reverse_iterator<Iterator>& lhs, const reverse_iterator<Iterator>& rhs)
 	{return !(lhs > rhs);}
-	friend bool operator > (const ReverseIterator<Iterator>& lhs, const ReverseIterator<Iterator>& rhs)
+	friend bool operator > (const reverse_iterator<Iterator>& lhs, const reverse_iterator<Iterator>& rhs)
 	{return lhs.current > rhs.current;}
-	friend bool operator >= (const ReverseIterator<Iterator>& lhs, const ReverseIterator<Iterator>& rhs)
+	friend bool operator >= (const reverse_iterator<Iterator>& lhs, const reverse_iterator<Iterator>& rhs)
 	{return !(lhs < rhs);}
 
-	friend ReverseIterator<Iterator> 
-	operator+ ( typename ReverseIterator<Iterator>::difference_type n, 
-							const ReverseIterator<Iterator>& rev_it )
+	friend reverse_iterator<Iterator> 
+	operator+ ( typename reverse_iterator<Iterator>::difference_type n, 
+							const reverse_iterator<Iterator>& rev_it )
 	{ return rev_it + n; }
 
-	friend typename ReverseIterator<Iterator>::difference_type 
-	operator- ( const ReverseIterator<Iterator>& lhs,
-							const ReverseIterator<Iterator>& rhs )
+	friend typename reverse_iterator<Iterator>::difference_type 
+	operator- ( const reverse_iterator<Iterator>& lhs,
+							const reverse_iterator<Iterator>& rhs )
 	{ return lhs.current - rhs.current; }
 
-};// end of ReverseIterator
+};// end of reverse_iterator
 
 }
 
