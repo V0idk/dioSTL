@@ -9,6 +9,33 @@
 #include "mycstring.h"
 
 namespace mmm{
+
+/***********equal(begin1,end1,begin)****************/
+
+template<class InputIt1, class InputIt2>
+bool equal(InputIt1 first1, InputIt1 last1, 
+           InputIt2 first2)
+{
+    for (; first1 != last1; ++first1, ++first2) {
+        if (!(*first1 == *first2)) {
+            return false;
+        }
+    }
+    return true;
+}
+
+template<class InputIt1, class InputIt2, class BinaryPredicate>
+bool equal(InputIt1 first1, InputIt1 last1, 
+           InputIt2 first2, BinaryPredicate p)
+{
+    for (; first1 != last1; ++first1, ++first2) {
+        if (!p(*first1, *first2)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 /************max(a,b,[compare])********************/
 template <class T> 
 const T& max(const T& a, const T& b){
@@ -96,36 +123,22 @@ void advance(InputIterator& it, Distance n){
 /***********copy(it1,it2,dest_it) 考虑平凡/非平凡类型构造****************/
 //指向目标范围中最后复制元素的下个元素的输出迭代器。
 
-template<class InputIterator, class OutputIterator>
-OutputIterator __copy(InputIterator first, InputIterator last, OutputIterator result, true_type){
-	auto dis = distance(first, last);
-	memcpy(result, first, sizeof(*first) * dis);
-	advance(result, dis);
-	return result;
-}
-template<class InputIterator, class OutputIterator>
-OutputIterator __copy(InputIterator first, InputIterator last, OutputIterator result, false_type){
-	while (first != last){
-		*result = *first;
-		++result;
-		++first;
+template <class InputIterator, class OutputIterator>
+OutputIterator copy(InputIterator first, InputIterator last, OutputIterator result){
+	while (first != last) {
+			*result++ = *first++;
 	}
 	return result;
 }
 
 template <class InputIterator, class OutputIterator>
-OutputIterator copy(InputIterator first, InputIterator last, OutputIterator result){
-	return __copy(first, last, result,  is_pod<iterator_value_type<InputIterator>>());
-}
-
-template <class InputIterator, class OutputIterator>
 OutputIterator copy_backward(InputIterator first, InputIterator last, OutputIterator result){
-	
-	OutputIterator new_result = result - (last - first);
-	return __copy(first, last, new_result,  is_pod<iterator_value_type<InputIterator>>());
 
+	while (first != last) {
+			*(--result) = *(--last);
+	}
+	return result;
 }
-
 
 /**********find(it1,it2,val)*******************/
 template <class InputIterator, class T>
