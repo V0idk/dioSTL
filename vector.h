@@ -257,7 +257,7 @@ typename vector<T, Alloc>::iterator vector<T, Alloc>::erase(iterator first, iter
 }
 
 // insert
-// 由于强类型,这两个函数暂时没办法合并重用.
+// 由于强类型(无法运行时类型推导)这两个函数暂时没办法合并重用.
 template<class T, class Alloc>
 template<class InputIterator>
 void vector<T, Alloc>::insert_aux(iterator position, InputIterator first, InputIterator last, false_type) {

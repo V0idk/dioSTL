@@ -35,12 +35,7 @@ public:
 public:
   //提供隐式转换
   list_iterator(nodePtr ptr = nullptr) : p(ptr) {}
-  list_iterator(const self &x) : p(x.p) {}
-  // template<typename S> list_iterator ( list_iterator<S>&& copy)  {
-	// 	// 强制转换A<T> *和A<const T> *, 这个函数提供iterator到const_iterator的转换. stl中把它分开了. 
-	// 	// 我们合并, 但要小心使用.
-	// 	p = reinterpret_cast<decltype(p)>(copy.p);
-	// }
+  list_iterator(const self &x) : p(x.p) {} //not allow const iterator to iterator
 
   self &operator=(const self &x) {
     p = x.p;
@@ -71,8 +66,6 @@ public:
 	bool operator!=(const self& right) const  { return !(p == right.p); }
 };
 
-
-
 template <class T> 
 struct list_const_iterator {
 public:
@@ -89,14 +82,8 @@ public:
 public:
   //提供隐式转换
   list_const_iterator(nodePtr ptr = nullptr) : p(ptr) {}
-  // list_const_iterator(const self &x) : p(x.p) {}
-
-  // template<typename S> list_iterator ( list_iterator<S>&& copy)  {
-	// 	// 强制转换A<T> *和A<const T> *, 这个函数提供iterator到const_iterator的转换. stl中把它分开了. 
-	// 	// 我们合并, 但要小心使用.
-	// 	p = reinterpret_cast<decltype(p)>(copy.p);
-	// }
 	list_const_iterator(const iterator& other) {
+		// 强制转换A<T> * 到 A<const T> *. gcc stl中却是提取出一个非模板基类避免强制转换.
 		p = reinterpret_cast<decltype(p)>(other.p);
 	}
 
@@ -128,8 +115,6 @@ public:
 	bool operator==(const self& right) const  { return p == right.p; }
 	bool operator!=(const self& right) const  { return !(p == right.p); }
 };
-
-
 
 
 // the class of list

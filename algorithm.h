@@ -246,7 +246,7 @@ bool is_heap(RandomIterator first, RandomIterator last, Compare comp){
 	const auto range = last - first;
 	auto index = range / 2 - 1;
 	for (auto cur = first + range / 2 - 1; cur >= first; --cur, --index){
-		auto parent = first + (cur - first + 1)/2 - 1;
+		// auto parent = first + (cur - first + 1)/2 - 1;
 		auto left = first + (cur - first + 1)*2 - 1;
 		auto right = left+1;
 		if(comp(*cur,*left) || ( right<last && comp(*cur,*right)))//可优化尾部的right<last，为了清晰暂不
