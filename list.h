@@ -28,19 +28,21 @@ public:
   typedef T value_type;
   typedef T *pointer;
   typedef T &reference;
-  typedef Detail::list_node<T> *nodePtr;
+  typedef Detail::list_node<T> *node_ptr;
   typedef list_iterator<T> self;
-  nodePtr p;
+  node_ptr p;
 
 public:
   //提供隐式转换
-  list_iterator(nodePtr ptr = nullptr) : p(ptr) {}
-  list_iterator(const self &x) : p(x.p) {} //not allow const iterator to iterator
+  list_iterator(node_ptr ptr = nullptr) : p(ptr) {}
 
-  self &operator=(const self &x) {
-    p = x.p;
-    return *this;
-  }
+	//not merge iterator and const_iterator to prevent  const_iterator->iterator
+  list_iterator(const self &x) : p(x.p) {}
+
+  // self &operator=(const self &x) {
+  //   p = x.p;
+  //   return *this;
+  // }
 
   self &operator++() {
     p = p->next;
@@ -74,24 +76,27 @@ public:
   typedef T value_type;
   typedef const T *pointer;
   typedef const T &reference;
-  typedef Detail::list_node<const T> *nodePtr;
+  typedef Detail::list_node<const T> *node_ptr;
 	typedef list_iterator<T>		iterator;
   typedef list_const_iterator<T> self;
-  nodePtr p;
+  node_ptr p;
 
 public:
   //提供隐式转换
-  list_const_iterator(nodePtr ptr = nullptr) : p(ptr) {}
+  list_const_iterator(node_ptr ptr = nullptr) : p(ptr) {}
+	
+	//iterator to const_iterator
+	//gcc stl中却是提取出一个非模板基类避免强制转换.但仍需static _cast向下转换
+	//但他们都是安全的
 	list_const_iterator(const iterator& other) {
-		// 强制转换A<T> * 到 A<const T> *. gcc stl中却是提取出一个非模板基类避免强制转换.
-		p = reinterpret_cast<decltype(p)>(other.p);
+		//list_node<T>* to list_node<const T> *
+		p = reinterpret_cast<node_ptr>(other.p);
 	}
-
+	list_const_iterator(const self& other) : p(other.p) {}
   self &operator=(const self &x) {
     p = x.p;
     return *this;
   }
-
   self &operator++() {
     p = p->next;
     return *this;
@@ -116,14 +121,13 @@ public:
 	bool operator!=(const self& right) const  { return !(p == right.p); }
 };
 
-
 // the class of list
 // list由双向循环链表实现,因此数据结构只需要一个指针.
 template <class T, class Allocator = allocator<Detail::list_node<T>>>
 class list {
 public:
   typedef Allocator allocator_type;
-  typedef Detail::list_node<T> *nodePtr;
+  typedef Detail::list_node<T> *node_ptr;
   typedef T value_type;
   typedef list_iterator<T> iterator;
   typedef list_const_iterator<T> const_iterator;
@@ -139,7 +143,7 @@ public:
 private:
   //iterator is not for implement, we use raw data 
 	// begin = end when init ,see reference
-  nodePtr head;
+  node_ptr head;
 
 public:
   list();
@@ -169,13 +173,13 @@ public:
   iterator end() { return head; }
 
   const_iterator begin() const { ;
-		return const_iterator(iterator(head->next));
+		return const_iterator(head->next);
 	}
 	const_iterator cbegin(){
-		return const_iterator(iterator(head->next));
+		return const_iterator(head->next);
 	}
   const_iterator end() const { 
-		return const_iterator(iterator(head));
+		return const_iterator(head);
 	}
   reverse_iterator rbegin() { return reverse_iterator(head); }
   reverse_iterator rend() { return reverse_iterator(head->next); }
@@ -211,13 +215,13 @@ public:
   void remove(const value_type &val);
   template <class UnaryPredicate>
   void remove_if(UnaryPredicate pred);
-  void unique();
+  void unique() { unique(mmm::equal_to<T>()); }
 
   template <class BinaryPredicate>
   void unique(BinaryPredicate binary_pred);
-  void merge(list &x);
+  void merge(list &x) { merge(x, less<T>()); }
   template <class Compare> void merge(list &x, Compare comp);
-  void sort();
+  void sort(){ sort(mmm::less<T>());}
   template <class Compare> void sort(Compare comp);
   void reverse();
   void transfer(const_iterator position, const_iterator first, const_iterator last);
@@ -230,13 +234,13 @@ private:
   template <class InputIterator>
   void insert_aux(iterator position, InputIterator first, InputIterator last,
                   false_type);
-  nodePtr create_node(const T &val = T());
-  void deleteNode(nodePtr p);
+  node_ptr create_node(const T &val = T());
+  void delete_node(node_ptr p);
   const_iterator changeIteratorToConstIterator(iterator &it) const;
 
 public:
   template <class T1, class Allocator1>
-  friend void swap(list<T1, Allocator> &x, list<T1, Allocator> &y);
+  friend void swap(list<T1, Allocator> &x, list<T1, Allocator> &y) {x.swap(y);} 
 }; // end of List
 
 //比较操作符
@@ -250,15 +254,14 @@ bool operator==(const list<T, Allocator> &lhs, const list<T, Allocator> &rhs) {
   }
   return (begin1 == end1 && begin2 == end2);
 }
-
 template <class T, class Allocator>
 bool operator!=(const list<T, Allocator> &lhs, const list<T, Allocator> &rhs) {
   return !(lhs == rhs);
 }
 
 template <class T, class Allocator>
-typename list<T, Allocator>::nodePtr list<T, Allocator>::create_node(const T &val) {
-  nodePtr tmp = allocator_type::allocate();
+typename list<T, Allocator>::node_ptr list<T, Allocator>::create_node(const T &val) {
+  node_ptr tmp = allocator_type::allocate();
   mmm::construct(&tmp->data, val);
 	tmp->next = tmp->prev = nullptr;
   return tmp;
@@ -266,7 +269,7 @@ typename list<T, Allocator>::nodePtr list<T, Allocator>::create_node(const T &va
 
 //释放结点
 template <class T, class Allocator>
-void list<T, Allocator>::deleteNode(nodePtr p) {
+void list<T, Allocator>::delete_node(node_ptr p) {
   mmm::destroy(&p->data);
   allocator_type::deallocate(p);
 }
@@ -362,7 +365,7 @@ list<T, Allocator>::erase(iterator position) {
   auto ret = position.p->next;
   position.p->next->prev = position.p->prev;
   position.p->prev->next = position.p->next;
-  deleteNode(position.p);
+  delete_node(position.p);
   return ret;
 }
 template <class T, class Allocator>
@@ -395,13 +398,9 @@ void list<T, Allocator>::remove_if(UnaryPredicate pred) {
   }
 }
 template <class T, class Allocator> void list<T, Allocator>::swap(list &x) {
-  nodePtr tmp = x.head;
+  node_ptr tmp = x.head;
   x.head = this->head;
   this->head = tmp;
-}
-template <class T, class Allocator>
-void swap(list<T, Allocator> &x, list<T, Allocator> &y) {
-  x.swap(y);
 }
 
 //将[first,last)之间的元素移动到position之前
@@ -448,7 +447,7 @@ void list<T, Allocator>::splice(const_iterator position, list &x, const_iterator
   transfer(position, first, last);
 }
 
-// reverse
+// reverse: 利用transfer逐个插到头部
 template <class T, class Allocator> void list<T, Allocator>::reverse() {
   if (size() == 0 || size() == 1)
     return;
@@ -459,27 +458,12 @@ template <class T, class Allocator> void list<T, Allocator>::reverse() {
     //不支持+操作符,虽然可实现
     auto tmp = start;
     auto next = ++tmp;
-    splice(begin(), *this, start);
+		transfer(begin(), start, next);
     start = next;
   }
 }
 
-// unique
-
-template <class T, class Allocator> void list<T, Allocator>::unique() {
-  auto first = begin();
-  auto last = end();
-  if (empty())
-    return; //空链表
-  iterator next = first;
-  while (++next != last) {
-    if (*first == *next)
-      erase(next);
-    else
-      first = next;
-    next = first;
-  }
-}
+// unique: 从容器移除所有相继的重复元素只保留一个
 
 template <class T, class Allocator>
 template <class BinaryPredicate>
@@ -497,31 +481,15 @@ void list<T, Allocator>::unique(BinaryPredicate binary_pred) {
     next = first;
   }
 }
-
-// merge 将x与*this合并，两个list必须经过递增排序
-template <class T, class Allocator> void list<T, Allocator>::merge(list &x) {
-  auto it1 = begin(), it2 = x.begin();
-  while (it1 != end() && it2 != x.end()) {
-    if (*it1 <= *it2)
-      ++it1;
-    else {
-      auto temp = it2++;
-      splice(it1, x, temp);
-    }
-  }
-  if (it1 == end()) {
-    splice(it1, x, it2, x.end());
-  }
-}
-
+// merge 将x与*this合并，两个list必须经过递增排序. 抽扑克牌
 template <class T, class Allocator>
 template <class Compare>
 void list<T, Allocator>::merge(list &x, Compare comp) {
   auto it1 = begin(), it2 = x.begin();
   while (it1 != end() && it2 != x.end()) {
     if (comp(*it2, *it1)) {
-      auto temp = it2++;
-      splice(it1, x, temp);
+      auto temp = it2;
+			transfer(it1, temp, ++it2);
     } else
       ++it1;
   }
@@ -530,10 +498,7 @@ void list<T, Allocator>::merge(list &x, Compare comp) {
   }
 }
 
-template <class T, class Allocator> void list<T, Allocator>::sort() {
-  sort(mmm::less<T>());
-}
-
+//构造一个临时链表. 从头遍历依次插入
 template <class T, class Allocator>
 template <class Compare>
 void list<T, Allocator>::sort(Compare comp) {
@@ -551,6 +516,7 @@ void list<T, Allocator>::sort(Compare comp) {
   //将tmp赋给本list
   swap(tmp);
 }
+
 } // namespace mmm
 
 #endif
