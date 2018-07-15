@@ -10,14 +10,17 @@ namespace mmm {
 
 #define _MMM_DEQUE_BUF_SIZE 512
 
-template <typename T> struct deque_iterator {
 
-  typedef deque_iterator<T> iterator;
-  typedef deque_iterator<const T> const_iterator;
+//template <typename T, typename Ref, typename Ptr> 兼容const_iterator.
+//ex: iterator<int,int&,int*> 对应 const_iterator<int,const int&,const int*> have same ::iterator. so constructor is same.
+template <typename T, typename Ref, typename Ptr> struct deque_iterator {
+
+  typedef deque_iterator<T, T &, T *> iterator;
+  typedef deque_iterator<T, const T &, const T *> const_iterator;
   typedef T value_type;
   typedef mmm::random_access_iterator_tag iterator_category;
-  typedef T *pointer;
-  typedef T &reference;
+  typedef Ptr pointer;
+  typedef Ref reference;
   typedef size_t size_type;
   typedef ptrdiff_t difference_type;
   typedef deque_iterator self;
@@ -33,7 +36,8 @@ template <typename T> struct deque_iterator {
                 ? size_t(_MMM_DEQUE_BUF_SIZE / sizeof(T))
                 : size_t(1));
   }
-  deque_iterator() : cur_(nullptr), first_(nullptr), last_(nullptr), map_(nullptr) {}
+  deque_iterator()
+      : cur_(nullptr), first_(nullptr), last_(nullptr), map_(nullptr) {}
 
   deque_iterator(pointer cur, map_pointer m)
       : cur_(cur), first_(*m), last_(*m + deque_buf_len()), map_(m) {}
@@ -83,7 +87,8 @@ template <typename T> struct deque_iterator {
       //超过尾部
       const difference_type node_offset =
           offset > 0 ? offset / difference_type(deque_buf_len())
-                     : -difference_type((-offset - 1) / deque_buf_len()) - 1; // map + i
+                     : -difference_type((-offset - 1) / deque_buf_len()) -
+                           1; // map + i
       set_map(map_ + node_offset);
       cur_ = first_ + (offset - node_offset * difference_type(deque_buf_len()));
     }
@@ -118,32 +123,51 @@ template <typename T> struct deque_iterator {
   }
 };
 
-template <typename T>
-inline typename deque_iterator<T>::difference_type
-operator-(const deque_iterator<T> &x, const deque_iterator<T> &y) {
-  return typename deque_iterator<T>::difference_type(
-             deque_iterator<T>::deque_buf_len()) *
+template <typename T, typename Ref, typename Ptr>
+inline typename deque_iterator<T, Ref, Ptr>::difference_type
+operator-(const deque_iterator<T, Ref, Ptr> &x,
+          const deque_iterator<T, Ref, Ptr> &y) {
+  return typename deque_iterator<T, Ref, Ptr>::difference_type(
+             deque_iterator<T, Ref, Ptr>::deque_buf_len()) *
              (x.map_ - y.map_ - 1) +
          (x.cur_ - x.first_) + (y.last_ - y.cur_);
 }
 
-template <typename T>
-inline bool operator==(const deque_iterator<T> &x, const deque_iterator<T> &y) {
+template <typename T, typename Ref, typename Ptr>
+inline bool operator==(const deque_iterator<T, Ref, Ptr> &x,
+                       const deque_iterator<T, Ref, Ptr> &y) {
   return x.cur_ == y.cur_;
 }
 
-template <typename T>
-inline bool operator!=(const deque_iterator<T> &x, const deque_iterator<T> &y) {
+template <typename T, typename Ref, typename Ptr>
+inline bool operator!=(const deque_iterator<T, Ref, Ptr> &x,
+                       const deque_iterator<T, Ref, Ptr> &y) {
   return !(x == y);
 }
+//this is for const_iterator == iterator
+// template <typename T, typename RefL, typename Ptr, typename RefR,
+//           typename _PtrR>
+// inline bool operator==(const deque_iterator<T, RefL, Ptr> &x,
+//                        const deque_iterator<T, RefR, _PtrR> &y) {
+//   return x.cur_ == y.cur_;
+// }
 
-// deque: 基于迭代器
+// template <typename T, typename RefL, typename Ptr, typename RefR,
+//           typename _PtrR>
+// inline bool operator!=(const deque_iterator<T, RefL, Ptr> &x,
+//                        const deque_iterator<T, RefR, _PtrR> &y) {
+//   return !(x == y);
+// }
+
+// -------------------------------------------------------------------------
+// deque
 template <class T, class Alloc = allocator<T>> class deque {
 public:
   typedef T value_type;
-  typedef deque_iterator<T> iterator;
-  typedef deque_iterator<const T> const_iterator;
+  typedef deque_iterator<T, T &, T *> iterator;
+  typedef deque_iterator<T, const T &, const T *> const_iterator;
   typedef T &reference;
+  typedef const T& const_reference;
   typedef size_t size_type;
   typedef ptrdiff_t difference_type;
   typedef Alloc allocator_type;
@@ -154,16 +178,17 @@ private:
 private:
   iterator begin_;
   iterator end_;
-  size_t map_len;
+  size_type map_len;
   T **map_;
 
 public:
   deque();
-  explicit deque(size_type n, const value_type &val = value_type()) :deque() {
-	  deque_aux(n, val, is_integer<size_type>());
+  explicit deque(size_type n, const value_type &val = value_type()) : deque() {
+    deque_aux(n, val, is_integer<size_type>());
   }
-  template <class InputIterator> deque(InputIterator first, InputIterator last):deque(){
-	  deque_aux(first, last, is_integer<InputIterator>());
+  template <class InputIterator>
+  deque(InputIterator first, InputIterator last) : deque() {
+    deque_aux(first, last, is_integer<InputIterator>());
   }
   deque(const deque &x);
 
@@ -171,8 +196,10 @@ public:
 
   iterator begin() { return begin_; }
   iterator end() { return end_; }
-  iterator begin() const { return begin_; }
-  iterator end() const { return end_; }
+  const_iterator begin() const { return begin_; } 
+  const_iterator end() const { return end_; }
+  const_iterator cbegin() const {return begin_;}
+  const_iterator cend() const { return end_; }
 
 public:
   size_type size() const { return end() - begin(); }
@@ -180,16 +207,25 @@ public:
 
   reference operator[](size_type n) { return *(begin() + n); }
   reference front() { return *begin(); }
+  const_reference front() const { return *begin(); }
+
   reference back() { return *(end() - 1); }
 
+  const_reference back() const { return *(end() - 1); }
+
   reference operator[](size_type n) const { return *(begin() + n); }
-  reference front() const { return *begin(); }
-  reference back() const { return *(end() - 1); }
+
 
   void push_back(const value_type &val);
   void push_front(const value_type &val);
-  void pop_back();
-  void pop_front();
+  void pop_back(){
+	--end_;
+	mmm::destroy(end_.cur_);
+  }
+  void pop_front(){
+	mmm::destroy(begin_.cur_);
+	++begin_;
+  }
   void swap(deque &x);
   void clear();
 
@@ -200,82 +236,59 @@ private:
                 : size_t(1));
   }
 
-  T **getNewMap(const size_t size);
-  size_t getNewMapSize() { return (map_len == 0 ? 2 : map_len * 2); }
-  size_t getSegmentSize() const { return deque_buf_len(); }
-  void initEmptyDeque();
-  bool reachMapTail() const;
-  bool reachMapHead() const;
+  T **get_new_map(const size_t size);
+  size_t get_new_map_size() { return (map_len == 0 ? 2 : map_len * 2); }
+  bool is_reach_map_tail() const;
+  bool is_reach_map_head() const;
   void deque_aux(size_t n, const value_type &val, true_type);
   template <class Iterator>
   void deque_aux(Iterator first, Iterator last, false_type);
-  void reallocateAndCopy();
-
-public:
-  template <class T1, class Alloc1>
-  friend bool operator==(const deque<T1, Alloc1> &lhs,
-                         const deque<T1, Alloc1> &rhs);
-  template <class T1, class Alloc1>
-  friend bool operator!=(const deque<T1, Alloc1> &lhs,
-                         const deque<T1, Alloc1> &rhs);
-  template <class T1, class Alloc1>
-  friend void swap(deque<T1, Alloc1> &x, deque<T1, Alloc1> &y);
+  void enlarge_map();
 }; // end of deque
 
-
 template <class T, class Alloc>
-T **deque<T, Alloc>::getNewMap(const size_t size) {
-  T **map = new T*[size];
+T **deque<T, Alloc>::get_new_map(const size_t size) {
+  T **map = new T *[size];
   for (size_t i = 0; i != size; ++i)
     map[i] = dataAllocator::allocate(deque_buf_len());
   return map;
 }
 
-template <class T, class Alloc> void deque<T, Alloc>::initEmptyDeque() {
+
+template <class T, class Alloc> deque<T, Alloc>::deque() : map_len(0), map_(0) {
   map_len = 2; //先申请两个段,便于中间(push_back,push_front) ---中----
-  map_ = getNewMap(map_len);
+  map_ = get_new_map(map_len);
   begin_.set_map(&map_[map_len - 1]);
   end_.set_map(&map_[map_len - 1]);
   begin_.cur_ = end_.cur_ = map_[map_len - 1];
 }
 
 template <class T, class Alloc>
-deque<T, Alloc>::deque() : map_len(0), map_(0) {
-  initEmptyDeque();
-}
-
-
-template <class T, class Alloc>
-deque<T, Alloc>::deque(const deque &x)
-    : map_len(0), map_(0) {
+deque<T, Alloc>::deque(const deque &x) : map_len(0), map_(0) {
   map_len = x.map_len;
-  map_ = getNewMap(map_len);
-  auto offset = typename deque_iterator<T>::difference_type(
-             deque_iterator<T>::deque_buf_len()) * ( x.begin().map_ - x.map_ - 1) + 
-			 (x.begin().cur_ - x.begin().first_) + (x.begin().last_ - x.begin().cur_);
-			 
+  map_ = get_new_map(map_len);
+  auto offset = typename deque::iterator::difference_type(
+                    deque::iterator::deque_buf_len()) *
+                    (x.begin().map_ - x.map_ - 1) +
+                (x.begin().cur_ - x.begin().first_) +
+                (x.begin().last_ - x.begin().cur_);
+
   begin_.set_map(&map_[map_len - 1]);
   end_.set_map(&map_[map_len - 1]);
   begin_.cur_ = end_.cur_ = map_[map_len - 1];
-  begin_ =  begin_ + offset;
+  begin_ = begin_ + offset;
   end_ = begin_;
   for (auto cur = x.begin(); cur != x.end(); ++cur)
     push_back(*cur);
 }
 
-
-//   return typename deque_iterator<T>::difference_type(
-//              deque_iterator<T>::deque_buf_len()) *
-//              (x.map_ - y.map_ - 1) +
-//          (x.cur_ - x.first_) + (y.last_ - y.cur_);
-
-template <class T, class Alloc> void deque<T, Alloc>::reallocateAndCopy() {
-  auto newMapSize = getNewMapSize();
-  T **newMap = getNewMap(newMapSize);
+template <class T, class Alloc> void deque<T, Alloc>::enlarge_map() {
+  auto newMapSize = get_new_map_size();
+  T **newMap = get_new_map(newMapSize);
   size_t startIndex = newMapSize / 4;
 
   int i = 0;
-  //map赋值
+  // map赋值
   for (auto cur = begin(); cur != end(); ++cur, i++) {
     for (size_t j = 0; j != deque_buf_len(); ++j)
       newMap[startIndex + i][j] = map_[i][j];
@@ -290,36 +303,27 @@ template <class T, class Alloc> void deque<T, Alloc>::reallocateAndCopy() {
   begin_.cur_ = map_[startIndex];
   end_ = begin_ + size;
 }
-template <class T, class Alloc> bool deque<T, Alloc>::reachMapTail() const {
+template <class T, class Alloc> bool deque<T, Alloc>::is_reach_map_tail() const {
   return map_[map_len] == end().cur_;
 }
-template <class T, class Alloc> bool deque<T, Alloc>::reachMapHead() const {
+template <class T, class Alloc> bool deque<T, Alloc>::is_reach_map_head() const {
   return map_[0] == begin().cur_;
 }
 template <class T, class Alloc>
 void deque<T, Alloc>::push_front(const value_type &val) {
-  if (reachMapHead())
-    reallocateAndCopy();
+  if (is_reach_map_head())
+    enlarge_map();
   --begin_;
   mmm::construct(begin_.cur_, val);
 }
 
 template <class T, class Alloc>
 void deque<T, Alloc>::push_back(const value_type &val) {
-  if (reachMapTail()) {
-    reallocateAndCopy();
+  if (is_reach_map_tail()) {
+    enlarge_map();
   }
   mmm::construct(end_.cur_, val);
   ++end_;
-}
-
-template <class T, class Alloc> void deque<T, Alloc>::pop_front() {
-  mmm::destroy(begin_.cur_);
-  ++begin_;
-}
-template <class T, class Alloc> void deque<T, Alloc>::pop_back() {
-  --end_;
-  mmm::destroy(end_.cur_);
 }
 
 //以迭代器/n个构造deque
