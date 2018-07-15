@@ -144,20 +144,6 @@ inline bool operator!=(const deque_iterator<T, Ref, Ptr> &x,
                        const deque_iterator<T, Ref, Ptr> &y) {
   return !(x == y);
 }
-//this is for const_iterator == iterator
-// template <typename T, typename RefL, typename Ptr, typename RefR,
-//           typename _PtrR>
-// inline bool operator==(const deque_iterator<T, RefL, Ptr> &x,
-//                        const deque_iterator<T, RefR, _PtrR> &y) {
-//   return x.cur_ == y.cur_;
-// }
-
-// template <typename T, typename RefL, typename Ptr, typename RefR,
-//           typename _PtrR>
-// inline bool operator!=(const deque_iterator<T, RefL, Ptr> &x,
-//                        const deque_iterator<T, RefR, _PtrR> &y) {
-//   return !(x == y);
-// }
 
 // -------------------------------------------------------------------------
 // deque
