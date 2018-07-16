@@ -20,16 +20,18 @@ template <class T> struct list_node {
 } // namespace Detail
 
 // list迭代器,双向. list_node* ptr.
-template <class T> 
+template <typename T, typename Ref, typename Ptr> 
 struct list_iterator {
 public:
   typedef ptrdiff_t difference_type;
   typedef mmm::bidirectional_iterator_tag iterator_category;
   typedef T value_type;
-  typedef T *pointer;
-  typedef T &reference;
+  typedef Ptr pointer;
+  typedef Ref reference;
   typedef Detail::list_node<T> *node_ptr;
-  typedef list_iterator<T> self;
+  typedef list_iterator<T,T&,T*> iterator;
+
+  typedef list_iterator<T,Ref,Ptr> self;
   node_ptr p;
 
 public:
@@ -37,7 +39,7 @@ public:
   list_iterator(node_ptr ptr = nullptr) : p(ptr) {}
 
 	//not merge iterator and const_iterator to prevent  const_iterator->iterator
-  list_iterator(const self &x) : p(x.p) {}
+  list_iterator(const iterator &x) : p(x.p) {}
 
   // self &operator=(const self &x) {
   //   p = x.p;
@@ -68,58 +70,59 @@ public:
 	bool operator!=(const self& right) const  { return !(p == right.p); }
 };
 
-template <class T> 
-struct list_const_iterator {
-public:
-  typedef ptrdiff_t difference_type;
-  typedef mmm::bidirectional_iterator_tag iterator_category;
-  typedef T value_type;
-  typedef const T *pointer;
-  typedef const T &reference;
-  typedef Detail::list_node<const T> *node_ptr;
-	typedef list_iterator<T>		iterator;
-  typedef list_const_iterator<T> self;
-  node_ptr p;
+// template <class T> 
+// struct list_const_iterator {
+// public:
+//   typedef ptrdiff_t difference_type;
+//   typedef mmm::bidirectional_iterator_tag iterator_category;
+//   typedef T value_type;
+//   typedef const T *pointer;
+//   typedef const T &reference;
+//   //not need const T,because only pointer and reference effect value
+//   typedef Detail::list_node<T> *node_ptr;
+// 	typedef list_iterator<T>		iterator;
+//   typedef list_const_iterator<T> self;
+//   node_ptr p;
 
-public:
-  //提供隐式转换
-  list_const_iterator(node_ptr ptr = nullptr) : p(ptr) {}
+// public:
+//   //提供隐式转换
+//   list_const_iterator(node_ptr ptr = nullptr) : p(ptr) {}
 	
-	//iterator to const_iterator
-	//gcc stl中却是提取出一个非模板基类避免强制转换.但仍需static _cast向下转换
-	//但他们都是安全的
-	list_const_iterator(const iterator& other) {
-		//list_node<T>* to list_node<const T> *
-		p = reinterpret_cast<node_ptr>(other.p);
-	}
-	list_const_iterator(const self& other) : p(other.p) {}
-  self &operator=(const self &x) {
-    p = x.p;
-    return *this;
-  }
-  self &operator++() {
-    p = p->next;
-    return *this;
-  }
-  self operator++(int) {
-    auto tmp = *this;
-    ++*this;
-    return tmp;
-  }
-  self &operator--() {
-    p = p->prev;
-    return *this;
-  }
-  self operator--(int) {
-    auto res = *this;
-    --*this;
-    return res;
-  }
-  reference operator*() { return p->data; }
-  pointer operator->() { return &(this->operator*()); }
-	bool operator==(const self& right) const  { return p == right.p; }
-	bool operator!=(const self& right) const  { return !(p == right.p); }
-};
+// 	//iterator to const_iterator
+// 	//gcc stl中却是提取出一个非模板基类避免强制转换.但仍需static _cast向下转换
+// 	//但他们都是安全的
+// 	list_const_iterator(const iterator& other) : p(other.p){
+// 		//list_node<T>* to list_node<const T> *
+// 		// p = reinterpret_cast<node_ptr>(other.p);
+// 	}
+// 	list_const_iterator(const self& other) : p(other.p) {}
+//   self &operator=(const self &x) {
+//     p = x.p;
+//     return *this;
+//   }
+//   self &operator++() {
+//     p = p->next;
+//     return *this;
+//   }
+//   self operator++(int) {
+//     auto tmp = *this;
+//     ++*this;
+//     return tmp;
+//   }
+//   self &operator--() {
+//     p = p->prev;
+//     return *this;
+//   }
+//   self operator--(int) {
+//     auto res = *this;
+//     --*this;
+//     return res;
+//   }
+//   reference operator*() { return p->data; }
+//   pointer operator->() { return &(this->operator*()); }
+// 	bool operator==(const self& right) const  { return p == right.p; }
+// 	bool operator!=(const self& right) const  { return !(p == right.p); }
+// };
 
 // the class of list
 // list由双向循环链表实现,因此数据结构只需要一个指针.
@@ -129,8 +132,8 @@ public:
   typedef Allocator allocator_type;
   typedef Detail::list_node<T> *node_ptr;
   typedef T value_type;
-  typedef list_iterator<T> iterator;
-  typedef list_const_iterator<T> const_iterator;
+  typedef list_iterator<T,T&,T*> iterator;
+  typedef list_iterator<T,const T&,const T*>const_iterator;
   typedef mmm::reverse_iterator<iterator> reverse_iterator;
 	typedef mmm::reverse_iterator<const_iterator> const_reverse_iterator;
   typedef T &reference;
