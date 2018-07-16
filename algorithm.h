@@ -46,6 +46,38 @@ const T& max(const T& a, const T& b, Compare compare){
 	return (compare(a, b)) ? b : a;
 }
 
+
+/************lexicographical_compare********************/
+template<class InputIt1, class InputIt2, class Compare>
+bool lexicographical_compare(InputIt1 first1, InputIt1 last1,
+                             InputIt2 first2, InputIt2 last2,
+                             Compare comp)
+{
+    for ( ; (first1 != last1) && (first2 != last2); ++first1, (void) ++first2 ) {
+        if (comp(*first1, *first2)) return true;
+        if (comp(*first2, *first1)) return false;
+    }
+    return (first1 == last1) && (first2 != last2);
+}
+
+template<class InputIt1, class InputIt2>
+bool lexicographical_compare(InputIt1 first1, InputIt1 last1,
+                             InputIt2 first2, InputIt2 last2)
+{
+	return lexicographical_compare( first1,  last1,
+                              first2,  last2, mmm::less<typename iterator_traits<InputIt1>::value_type>());
+}
+
+  // struct _Iter_less_iter
+  // {
+  //   template<typename _Iterator1, typename _Iterator2>
+  //     _GLIBCXX14_CONSTEXPR
+  //     bool
+  //     operator()(_Iterator1 __it1, _Iterator2 __it2) const
+  //     { return *__it1 < *__it2; }
+  // };
+
+
 /*************fill_n(it,n,value)*********/
 template<class OutputIterator, class Size, class T>
 OutputIterator fill_n(OutputIterator first, Size n, const T& value) {

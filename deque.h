@@ -1,18 +1,18 @@
 #ifndef _DEQUE_H_
 #define _DEQUE_H_
 
+#include "algorithm.h"
 #include "allocator.h"
 #include "iterator.h"
 #include "type_traits.h"
 #include "utility.h"
-
 namespace mmm {
 
 #define _MMM_DEQUE_BUF_SIZE 512
 
-
-//template <typename T, typename Ref, typename Ptr> 兼容const_iterator.
-//ex: iterator<int,int&,int*> 对应 const_iterator<int,const int&,const int*> have same ::iterator. so constructor is same.
+// template <typename T, typename Ref, typename Ptr> 兼容const_iterator.
+// ex: iterator<int,int&,int*> 对应 const_iterator<int,const int&,const int*> hav
+//  same ::iterator. so constructor is same.
 template <typename T, typename Ref, typename Ptr> struct deque_iterator {
 
   typedef deque_iterator<T, T &, T *> iterator;
@@ -153,7 +153,7 @@ public:
   typedef deque_iterator<T, T &, T *> iterator;
   typedef deque_iterator<T, const T &, const T *> const_iterator;
   typedef T &reference;
-  typedef const T& const_reference;
+  typedef const T &const_reference;
   typedef size_t size_type;
   typedef ptrdiff_t difference_type;
   typedef Alloc allocator_type;
@@ -182,9 +182,9 @@ public:
 
   iterator begin() { return begin_; }
   iterator end() { return end_; }
-  const_iterator begin() const { return begin_; } 
+  const_iterator begin() const { return begin_; }
   const_iterator end() const { return end_; }
-  const_iterator cbegin() const {return begin_;}
+  const_iterator cbegin() const { return begin_; }
   const_iterator cend() const { return end_; }
 
 public:
@@ -201,16 +201,15 @@ public:
 
   reference operator[](size_type n) const { return *(begin() + n); }
 
-
   void push_back(const value_type &val);
   void push_front(const value_type &val);
-  void pop_back(){
-	--end_;
-	mmm::destroy(end_.cur_);
+  void pop_back() {
+    --end_;
+    mmm::destroy(end_.cur_);
   }
-  void pop_front(){
-	mmm::destroy(begin_.cur_);
-	++begin_;
+  void pop_front() {
+    mmm::destroy(begin_.cur_);
+    ++begin_;
   }
   void swap(deque &x);
   void clear();
@@ -239,7 +238,6 @@ T **deque<T, Alloc>::get_new_map(const size_t size) {
     map[i] = dataAllocator::allocate(deque_buf_len());
   return map;
 }
-
 
 template <class T, class Alloc> deque<T, Alloc>::deque() : map_len(0), map_(0) {
   map_len = 2; //先申请两个段,便于中间(push_back,push_front) ---中----
@@ -289,10 +287,12 @@ template <class T, class Alloc> void deque<T, Alloc>::enlarge_map() {
   begin_.cur_ = map_[startIndex];
   end_ = begin_ + size;
 }
-template <class T, class Alloc> bool deque<T, Alloc>::is_reach_map_tail() const {
+template <class T, class Alloc>
+bool deque<T, Alloc>::is_reach_map_tail() const {
   return map_[map_len] == end().cur_;
 }
-template <class T, class Alloc> bool deque<T, Alloc>::is_reach_map_head() const {
+template <class T, class Alloc>
+bool deque<T, Alloc>::is_reach_map_head() const {
   return map_[0] == begin().cur_;
 }
 template <class T, class Alloc>
@@ -361,23 +361,43 @@ template <class T, class Alloc> void deque<T, Alloc>::swap(deque<T, Alloc> &x) {
 }
 
 template <class T, class Alloc>
-bool operator==(const deque<T, Alloc> &lhs, const deque<T, Alloc> &rhs) {
-  auto cit1 = lhs.begin(), cit2 = rhs.begin();
-  for (; cit1 != lhs.end() && cit2 != rhs.end(); ++cit1, ++cit2) {
+bool operator==(const deque<T, Alloc> &x, const deque<T, Alloc> &y) {
+  auto cit1 = x.begin(), cit2 = y.begin();
+  for (; cit1 != x.end() && cit2 != y.end(); ++cit1, ++cit2) {
     if (*cit1 != *cit2)
       return false;
   }
-  if (cit1 == lhs.end() && cit2 == rhs.end())
+  if (cit1 == x.end() && cit2 == y.end())
     return true;
   return false;
 }
 template <class T, class Alloc>
-bool operator!=(const deque<T, Alloc> &lhs, const deque<T, Alloc> &rhs) {
-  return !(lhs == rhs);
+inline bool operator!=(const deque<T, Alloc> &x, const deque<T, Alloc> &y) {
+  return !(x == y);
 }
 template <class T, class Alloc>
-void swap(deque<T, Alloc> &x, deque<T, Alloc> &y) {
+inline void swap(deque<T, Alloc> &x, deque<T, Alloc> &y) {
   x.swap(y);
+}
+
+template <typename T, typename Alloc>
+inline bool operator<(const deque<T, Alloc> &x, const deque<T, Alloc> &y) {
+  return mmm::lexicographical_compare(x.begin(), x.end(), y.begin(), y.end());
+}
+
+template <typename T, typename Alloc>
+inline bool operator>(const deque<T, Alloc> &x, const deque<T, Alloc> &y) {
+  return y < x;
+}
+
+template <typename T, typename Alloc>
+inline bool operator<=(const deque<T, Alloc> &x, const deque<T, Alloc> &y) {
+  return !(y < x);
+}
+
+template <typename T, typename Alloc>
+inline bool operator>=(const deque<T, Alloc> &x, const deque<T, Alloc> &y) {
+  return !(x < y);
 }
 
 } // namespace mmm

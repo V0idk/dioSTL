@@ -38,14 +38,14 @@ public:
                         const stack<T1, Container1> &);
 };
 template <class T, class Container>
-bool operator==(const stack<T, Container> &lhs,
-                const stack<T, Container> &rhs) {
-  return lhs.container_ == rhs.container_;
+bool operator==(const stack<T, Container> &x,
+                const stack<T, Container> &y) {
+  return x.container_ == y.container_;
 }
 template <class T, class Container>
-bool operator!=(const stack<T, Container> &lhs,
-                const stack<T, Container> &rhs) {
-  return !(lhs == rhs);
+bool operator!=(const stack<T, Container> &x,
+                const stack<T, Container> &y) {
+  return !(x == y);
 }
 
 template <typename T, typename Container>
