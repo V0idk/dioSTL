@@ -141,6 +141,16 @@ void testHeap() {
   assert(mmm::container_equal(v1, v2));
 }
 
+
+void testQuicksort(){
+  int myints[] = {10, 20, 30, 5, 15, 21, 43, 53, 2, 5, 332, 34, 23};
+  mmm::vector<int> v1(myints, myints + 13);
+  mmm::vector<int> v2(myints, myints + 13);
+  std::sort(v2.begin(),v2.end());
+  mmm::quicksort(v1.begin(), v1.end());
+  assert(mmm::container_equal(v1, v2));
+}
+
 void testAll() {
   testMax();
   testFillN();
@@ -148,6 +158,7 @@ void testAll() {
   testAdvance();
   testCopy();
   testHeap();
+  testQuicksort();
 }
 
 } // namespace algorithmTest

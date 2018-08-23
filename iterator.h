@@ -159,6 +159,75 @@ public:
 
 };// end of reverse_iterator
 
+//----------------算法----------------
+
+/**********distance(it1,it2) 考虑random和forward迭代器 ***********/
+template<class InputIterator>
+iterator_difference_type<InputIterator>
+_distance(InputIterator first, InputIterator last, forward_iterator_tag){
+	iterator_difference_type<InputIterator> dist = 0;
+	while (first++ != last){
+		++dist;
+	}
+	return dist;
 }
+template<class RandomIterator>
+iterator_difference_type<RandomIterator>
+_distance(RandomIterator first, RandomIterator last, random_access_iterator_tag){
+	return last - first;
+}
+
+template<class Iterator>
+iterator_difference_type<Iterator>
+distance(Iterator first, Iterator last){
+	return _distance(first, last, iterator_category<Iterator>()); 
+}
+
+/*****advance(it,distance) 考虑双向(负数距离)，单向， random*********/
+
+template<class InputIterator, class Distance>
+void _advance(InputIterator& it, Distance n, input_iterator_tag){
+	assert(n >= 0);
+	while (n--){
+		++it;
+	}
+}
+template<class BidirectionIterator, class Distance>
+void _advance(BidirectionIterator& it, Distance n, bidirectional_iterator_tag){
+	if (n < 0){
+		while (n++){
+			--it;
+		}
+	}else{
+		while (n--){
+			++it;
+		}
+	}
+}
+template<class RandomIterator, class Distance>
+void _advance(RandomIterator& it, Distance n, random_access_iterator_tag){
+	if (n < 0){
+		it -= (-n);
+	}else{
+		it += n;
+	}
+}
+
+template <class InputIterator, class Distance> 
+void advance(InputIterator& it, Distance n){
+	_advance(it, n, iterator_category<InputIterator>());
+}
+
+//advance
+template<class ForwardIt>
+ForwardIt next(ForwardIt it,
+               typename iterator_traits<ForwardIt>::difference_type n = 1)
+{
+    mmm::advance(it, n);
+    return it;
+}
+
+
+} //namespace mmm
 
 #endif
