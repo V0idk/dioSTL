@@ -264,6 +264,16 @@ void iter_swap(ForwardIt1 a, ForwardIt2 b) {
 // partition
 // 重排序范围 [first, last) 中的元素，使得谓词 p 对其返回 true 的元素在false的前面.
 // 
+//
+//
+//
+//
+//
+//
+//
+//
+//
+//
 //返回交界处(不满足)
 template <class ForwardIt, class UnaryPredicate>
 ForwardIt partition(ForwardIt first, ForwardIt last, UnaryPredicate p) {
@@ -297,22 +307,24 @@ after 2nd part: {3, 3, 1, 1, 4, 4, 4, 4, 5, 6, 8, 8, 6}
                              ↑           ↑
                              middle1     middle2
 */
-template <class ForwardIterator>
-void quicksort(ForwardIterator first, ForwardIterator last) {
+template <class ForwardIterator, typename Comparator = decltype(
+                                     mmm::less<typename mmm::iterator_traits<
+                                         ForwardIterator>::value_type>())>
+void quicksort(ForwardIterator first, ForwardIterator last,
+               Comparator cmp = Comparator()) {
   if (first == last)
     return;
-  auto pivot =
-      *mmm::next(first, mmm::distance(first, last) /
-                            2); //中间位置的值
-                                // auto pivot = *(first + (last-first)/2);
-                                //两次, 性能考虑
+  auto pivot = *mmm::next(first, mmm::distance(first, last) / 2); //中间位置的值
+  //两次, 性能考虑
   ForwardIterator middle1 = mmm::partition(
-      first, last, [pivot](const iterator_value_type<ForwardIterator> &em) {
-        return em < pivot;
+      first, last,
+      [pivot, cmp](const iterator_value_type<ForwardIterator> &em) {
+        return cmp(em, pivot);
       }); // const auto &em c++14
   ForwardIterator middle2 = mmm::partition(
-      middle1, last, [pivot](const iterator_value_type<ForwardIterator> &em) {
-        return !(pivot < em);
+      middle1, last,
+      [pivot, cmp](const iterator_value_type<ForwardIterator> &em) {
+        return !cmp(pivot, em);
       }); // em >= pivot 使用<. 因为可能没有实现其他操作.
   quicksort(first, middle1);
   quicksort(middle2, last);
@@ -320,8 +332,7 @@ void quicksort(ForwardIterator first, ForwardIterator last) {
 
 // https://stackoverflow.com/questions/2447458/default-template-arguments-for-function-templates
 template <typename ForwardIterator, typename Comparator = decltype(
-                                        mmm::less<typename mmm::iterator_traits<
-                                            ForwardIterator>::value_type>())>
+                                        iterator_value_type<ForwardIterator>())>
 void bubblesort(ForwardIterator begin, ForwardIterator end,
                 Comparator cmp = Comparator()) {
   for (auto j = end; j != begin; --j) {
@@ -332,6 +343,24 @@ void bubblesort(ForwardIterator begin, ForwardIterator end,
         mmm::swap(val1, val0);
       }
     }
+  }
+}
+
+template <class ForwardIterator, typename Comparator = decltype(
+                                     mmm::less<typename mmm::iterator_traits<
+                                         ForwardIterator>::value_type>())>
+void selectionsort(ForwardIterator first, ForwardIterator last,
+                   Comparator cmp = Comparator()) {
+  //原理：从头开始扫描最大或者最小的数字，扫描完后放到前面相应位置
+  for (auto i = first; i != last; ++i) {
+    auto max_ = i;
+    for (auto j = i; j != last; ++j) {
+      auto &val0 = *max_;
+      auto &val1 = *j;
+      if (cmp(val1, val0))
+        max_ = j;
+    }
+    mmm::swap(*max_, *i);
   }
 }
 
