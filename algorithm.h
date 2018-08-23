@@ -263,6 +263,7 @@ void iter_swap(ForwardIt1 a, ForwardIt2 b) {
 
 // partition
 // 重排序范围 [first, last) 中的元素，使得谓词 p 对其返回 true 的元素在false的前面.
+// 
 //返回交界处(不满足)
 template <class ForwardIt, class UnaryPredicate>
 ForwardIt partition(ForwardIt first, ForwardIt last, UnaryPredicate p) {
@@ -279,8 +280,8 @@ ForwardIt partition(ForwardIt first, ForwardIt last, UnaryPredicate p) {
   return first;
 }
 
-//https://en.cppreference.com/w/Talk:cpp/algorithm/partition
-//https://stackoverflow.com/questions/35963436/stdpartition-called-twice-for-quick-sort
+// https://en.cppreference.com/w/Talk:cpp/algorithm/partition
+// https://stackoverflow.com/questions/35963436/stdpartition-called-twice-for-quick-sort
 /*
 initial array:  {3, 4, 5, 3, 4, 6, 4, 1, 4, 8, 8, 1, 6}
                                    ↑
@@ -296,16 +297,42 @@ after 2nd part: {3, 3, 1, 1, 4, 4, 4, 4, 5, 6, 8, 8, 6}
                              ↑           ↑
                              middle1     middle2
 */
-template <class ForwardIt> void quicksort(ForwardIt first, ForwardIt last) {
+template <class ForwardIterator>
+void quicksort(ForwardIterator first, ForwardIterator last) {
   if (first == last)
     return;
-  auto pivot = *mmm::next(first, mmm::distance(first, last) / 2);//中间位置的值
-	// auto pivot = *(first + (last-first)/2);
-	//两次, 性能考虑
-  ForwardIt middle1 = mmm::partition(first, last, [pivot](const iterator_value_type<ForwardIt> &em) { return em < pivot; }); //const auto &em c++14
-  ForwardIt middle2 = mmm::partition(middle1, last, [pivot](const iterator_value_type<ForwardIt> &em) { return !(pivot < em); }); //em >= pivot 使用<. 因为可能没有实现其他操作.
+  auto pivot =
+      *mmm::next(first, mmm::distance(first, last) /
+                            2); //中间位置的值
+                                // auto pivot = *(first + (last-first)/2);
+                                //两次, 性能考虑
+  ForwardIterator middle1 = mmm::partition(
+      first, last, [pivot](const iterator_value_type<ForwardIterator> &em) {
+        return em < pivot;
+      }); // const auto &em c++14
+  ForwardIterator middle2 = mmm::partition(
+      middle1, last, [pivot](const iterator_value_type<ForwardIterator> &em) {
+        return !(pivot < em);
+      }); // em >= pivot 使用<. 因为可能没有实现其他操作.
   quicksort(first, middle1);
   quicksort(middle2, last);
+}
+
+// https://stackoverflow.com/questions/2447458/default-template-arguments-for-function-templates
+template <typename ForwardIterator, typename Comparator = decltype(
+                                        mmm::less<typename mmm::iterator_traits<
+                                            ForwardIterator>::value_type>())>
+void bubblesort(ForwardIterator begin, ForwardIterator end,
+                Comparator cmp = Comparator()) {
+  for (auto j = end; j != begin; --j) {
+    for (auto i = mmm::next(begin); i != j; ++i) {
+      auto &val0 = *i;
+      auto &val1 = *mmm::prev(i);
+      if (cmp(val0, val1)) {
+        mmm::swap(val1, val0);
+      }
+    }
+  }
 }
 
 } // namespace mmm

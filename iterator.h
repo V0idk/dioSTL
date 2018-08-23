@@ -212,18 +212,25 @@ void _advance(RandomIterator& it, Distance n, random_access_iterator_tag){
 		it += n;
 	}
 }
-
+//advance
 template <class InputIterator, class Distance> 
 void advance(InputIterator& it, Distance n){
 	_advance(it, n, iterator_category<InputIterator>());
 }
 
-//advance
+
 template<class ForwardIt>
 ForwardIt next(ForwardIt it,
                typename iterator_traits<ForwardIt>::difference_type n = 1)
 {
     mmm::advance(it, n);
+    return it;
+}
+
+template<class BidirIt>
+BidirIt prev(BidirIt it, typename mmm::iterator_traits<BidirIt>::difference_type n = 1)
+{
+    mmm::advance(it, -n);
     return it;
 }
 

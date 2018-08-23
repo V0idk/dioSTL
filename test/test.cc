@@ -151,6 +151,16 @@ void testQuicksort(){
   assert(mmm::container_equal(v1, v2));
 }
 
+void testbubblesort(){
+  int myints[] = {10, 20, 30, 5, 15, 21, 43, 53, 2, 5, 332, 34, 23};
+  mmm::vector<int> v1(myints, myints + 13);
+  mmm::vector<int> v2(myints, myints + 13);
+  std::sort(v2.begin(),v2.end(),std::greater<int>());
+  mmm::bubblesort(v1.begin(), v1.end(), mmm::greater<int>());
+  assert(mmm::container_equal(v1, v2));
+}
+
+
 void testAll() {
   testMax();
   testFillN();
