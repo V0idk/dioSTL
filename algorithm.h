@@ -187,16 +187,13 @@ void pop_heap(RandomIterator first, RandomIterator last) {
 }
 
 //堆排序，原地算法。连续交换尾部
-template <class RandomIterator, class Compare>
-void sort_heap(RandomIterator first, RandomIterator last, Compare comp) {
+template <class RandomIterator,
+          class Compare = less<iterator_value_type<RandomIterator>>>
+void sort_heap(RandomIterator first, RandomIterator last,
+               Compare comp = Compare()) {
   for (auto cur = last; cur != first; --cur) {
     mmm::pop_heap(first, cur, comp);
   }
-}
-template <class RandomIterator>
-void sort_heap(RandomIterator first, RandomIterator last) {
-  return mmm::sort_heap(first, last,
-                        less<iterator_value_type<RandomIterator>>());
 }
 
 //从非叶结点开始判断。
@@ -268,12 +265,6 @@ void iter_swap(ForwardIt1 a, ForwardIt2 b) {
 //
 //
 //
-//
-//
-//
-//
-//
-//
 //返回交界处(不满足)
 template <class ForwardIt, class UnaryPredicate>
 ForwardIt partition(ForwardIt first, ForwardIt last, UnaryPredicate p) {
@@ -307,9 +298,8 @@ after 2nd part: {3, 3, 1, 1, 4, 4, 4, 4, 5, 6, 8, 8, 6}
                              ↑           ↑
                              middle1     middle2
 */
-template <class ForwardIterator, typename Comparator = decltype(
-                                     mmm::less<typename mmm::iterator_traits<
-                                         ForwardIterator>::value_type>())>
+template <class ForwardIterator,
+          typename Comparator = mmm::less<iterator_value_type<ForwardIterator>>>
 void quicksort(ForwardIterator first, ForwardIterator last,
                Comparator cmp = Comparator()) {
   if (first == last)
@@ -331,8 +321,8 @@ void quicksort(ForwardIterator first, ForwardIterator last,
 }
 
 // https://stackoverflow.com/questions/2447458/default-template-arguments-for-function-templates
-template <typename ForwardIterator, typename Comparator = decltype(
-                                        iterator_value_type<ForwardIterator>())>
+template <typename ForwardIterator,
+          typename Comparator = mmm::less<iterator_value_type<ForwardIterator>>>
 void bubblesort(ForwardIterator begin, ForwardIterator end,
                 Comparator cmp = Comparator()) {
   for (auto j = end; j != begin; --j) {
@@ -346,9 +336,8 @@ void bubblesort(ForwardIterator begin, ForwardIterator end,
   }
 }
 
-template <class ForwardIterator, typename Comparator = decltype(
-                                     mmm::less<typename mmm::iterator_traits<
-                                         ForwardIterator>::value_type>())>
+template <class ForwardIterator,
+          typename Comparator = mmm::less<iterator_value_type<ForwardIterator>>>
 void selectionsort(ForwardIterator first, ForwardIterator last,
                    Comparator cmp = Comparator()) {
   //原理：从头开始扫描最大或者最小的数字，扫描完后放到前面相应位置
@@ -364,6 +353,20 @@ void selectionsort(ForwardIterator first, ForwardIterator last,
   }
 }
 
+template <typename ForwardIterator,
+          typename Comparator = mmm::less<iterator_value_type<ForwardIterator>>>
+void insertionsort(ForwardIterator begin, ForwardIterator end,
+                   Comparator cmp = Comparator()) {
+  for (auto i = mmm::next(begin); i != end; ++i) {
+    auto key = *i;
+    auto j = mmm::prev(i);
+    while (j >= begin and cmp(key, *j)) {
+      *mmm::next(j) = *j;
+      --j;
+    }
+    *mmm::next(j) = key;
+  }
+}
 } // namespace mmm
 
 #endif

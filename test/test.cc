@@ -28,15 +28,43 @@
 #include <vector>
 namespace mmm {
 
+//https://stackoverflow.com/questions/34052948/printing-any-stl-container
+// template<typename T>
+// std::ostream& print(std::ostream &out, T const &val) { 
+//   return (out << val << " ");
+// }
+
+// template<typename T1, typename T2>
+// std::ostream& print(std::ostream &out, std::pair<T1, T2> const &val) { 
+//   return (out << "{" << val.first << " " << val.second << "} ");
+// }
+
+// template<template<typename, typename...> class TT, typename... Args>
+// std::ostream& operator<<(std::ostream &out, TT<Args...> const &cont) {
+//   for(auto&& elem : cont) print(out, elem);
+//   return out;
+// }
+
+
 template <class Container1, class Container2>
-bool container_equal(Container1 &con1, Container2 &con2) {
-  auto first1 = std::begin(con1), last1 = std::end(con1);
-  auto first2 = std::begin(con2), last2 = std::end(con2);
+bool container_equal(Container1 &&con1, Container2 &&con2) {
+  auto first1 = mmm::begin(con1), last1 = mmm::end(con1);
+  auto first2 = mmm::begin(con2), last2 = mmm::end(con2);
   for (; first1 != last1 && first2 != last2; ++first1, ++first2) {
     if (*first1 != *first2)
       return false;
   }
   return (first1 == last1 && first2 == last2);
+}
+
+template <class Container>
+void print_container(Container &&c) {
+  auto first = mmm::begin(c);
+  auto last = mmm::end(c);
+  for (; first != last; ++first) {
+    std::cout<< *first << " ";
+  }
+  std::cout << std::endl;
 }
 
 class A {
@@ -161,12 +189,23 @@ void testbubblesort(){
 }
 
 
-void selectionsort(){
+void testselectionsort(){
   int myints[] = {10, 20, 30, 5, 15, 21, 43, 53, 2, 5, 332, 34, 23};
   mmm::vector<int> v1(myints, myints + 13);
   mmm::vector<int> v2(myints, myints + 13);
   std::sort(v2.begin(),v2.end(),std::greater<int>());
   mmm::selectionsort(v1.begin(), v1.end(), mmm::greater<int>());
+  assert(mmm::container_equal(v1, v2));
+}
+
+
+
+void testinsertionsort(){
+  int myints[] = {10, 20, 30, 5, 15, 21, 43, 53, 2, 5, 332, 34, 23};
+  mmm::vector<int> v1(myints, myints + 13);
+  mmm::vector<int> v2(myints, myints + 13);
+  mmm::insertionsort(v1.begin(), v1.end());
+  std::sort(v2.begin(),v2.end());
   assert(mmm::container_equal(v1, v2));
 }
 
@@ -179,7 +218,8 @@ void testAll() {
   testHeap();
   testQuicksort();
   testbubblesort();
-  selectionsort();
+  testselectionsort();
+  testinsertionsort();
 }
 
 } // namespace algorithmTest
