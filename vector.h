@@ -199,7 +199,7 @@ class vector{
 	//若需要的容量不大于当前capacity，则仅仅2*当前，否则当前+需要的. 这样不至于过大。
 	size_type get_new_capacity(size_type need) const {
 		//std::ptrdiff_t is signed. std::size_t is unsigned.
-		size_type cur = end_of_storage_ - start_;
+		size_type cur = capacity();
 		if(cur == 0)
 			return need;
 		else if(need > cur)
@@ -268,7 +268,7 @@ void vector<T, Alloc>::insert_aux(iterator position, InputIterator first, InputI
 		finish_ += need;
 	}
 	else{
-		difference_type newCapacity = get_new_capacity(last - first);
+		difference_type newCapacity = get_new_capacity(need);
 		auto new_start = allocator_type::allocate(newCapacity);
 		auto new_end_of_storage = new_start + newCapacity;
 		auto new_finish = mmm::uninitialized_copy(begin(), position, new_start);
@@ -285,7 +285,7 @@ template<class T, class Alloc>
 void vector<T, Alloc>::insert_aux(iterator position, size_type n, const value_type& value, true_type){
 	difference_type need = n;
 	//enough
-	if (end_of_storage_ - finish_ > need){
+	if (end_of_storage_ - finish_ >= need){
 		//后移
     mmm::copy_backward(position,finish_ ,finish_+ need);
 		//填充
@@ -295,7 +295,7 @@ void vector<T, Alloc>::insert_aux(iterator position, size_type n, const value_ty
 	else{
 		// not enough
 		//复制到新内存
-		difference_type newCapacity = get_new_capacity(n);
+		difference_type newCapacity = get_new_capacity(need);
 		auto new_start = allocator_type::allocate(newCapacity);
 		auto new_end_of_storage = new_start + newCapacity;
 		auto new_finish = mmm::uninitialized_copy(begin(), position, new_start);

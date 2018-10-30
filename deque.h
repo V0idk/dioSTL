@@ -3,6 +3,7 @@
 
 #include "algorithm.h"
 #include "allocator.h"
+#include "uninitialized.h"
 #include "iterator.h"
 #include "type_traits.h"
 #include "utility.h"
@@ -229,11 +230,20 @@ private:
   template <class Iterator>
   void deque_aux(Iterator first, Iterator last, false_type);
   void enlarge_map();
+
+	void release_map(){
+    for (size_t i = 0; i != map_len; ++i) {
+      if (map_[i])
+        dataAllocator::deallocate(map_[i], deque_buf_len());
+    }
+    dataAllocator::deallocate((T *)map_,map_len*sizeof(T*));
+	}
 }; // end of deque
 
 template <class T, class Alloc>
 T **deque<T, Alloc>::get_new_map(const size_t size) {
-  T **map = new T *[size];
+  // T **map = new T *[size];
+  T **map = (T**)dataAllocator::allocate(size*sizeof(T*));
   for (size_t i = 0; i != size; ++i)
     map[i] = dataAllocator::allocate(deque_buf_len());
   return map;
@@ -271,16 +281,16 @@ template <class T, class Alloc> void deque<T, Alloc>::enlarge_map() {
   T **newMap = get_new_map(newMapSize);
   size_t startIndex = newMapSize / 4;
 
-  int i = 0;
-  // map赋值
-  for (auto cur = begin(); cur != end(); ++cur, i++) {
-    for (size_t j = 0; j != deque_buf_len(); ++j)
-      newMap[startIndex + i][j] = map_[i][j];
-  }
+  iterator dst;
+  dst.set_map(&newMap[startIndex]);
 
+  for (auto cur = begin(); cur != end(); ++cur) 
+    *dst = *cur;
+  
   auto size = this->size();
 
-  clear();
+  // clear();
+  release_map();
   map_len = newMapSize;
   map_ = newMap;
   begin_.set_map(&map_[startIndex]);
@@ -347,10 +357,11 @@ template <class T, class Alloc> deque<T, Alloc>::~deque() {
   for (size_t i = 0; i != map_len; ++i) {
     for (auto p = map_[i] + 0; !p && p != map_[i] + deque_buf_len(); ++p)
       mmm::destroy(p);
-    if (!map_[i])
+    if (map_[i])
       dataAllocator::deallocate(map_[i], deque_buf_len());
   }
-  delete[] map_;
+  //delete[] map_;
+  dataAllocator::deallocate((T *)map_,map_len*sizeof(T*));
 }
 
 template <class T, class Alloc> void deque<T, Alloc>::swap(deque<T, Alloc> &x) {

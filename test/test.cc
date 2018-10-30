@@ -12,6 +12,7 @@
 #include "../uninitialized.h"
 #include "../utility.h"
 #include "../vector.h"
+#include "../alloc.h"
 
 #include <algorithm>
 #include <cassert>
@@ -26,6 +27,7 @@
 #include <stack>
 #include <string>
 #include <vector>
+
 namespace mmm {
 
 //https://stackoverflow.com/questions/34052948/printing-any-stl-container
@@ -841,7 +843,7 @@ void testCase2() {
 }
 void testCase3() {
   mmm::vector<int> v1, v2;
-  for (int i = 0; i != 100; ++i) {
+  for (int i = 0; i != 1000; ++i) {
     v1.push_back(i);
     v2.push_back(i);
   }
@@ -1062,12 +1064,16 @@ void testAll() {
 
 int main() {
   std::cout << "start test" << std::endl;
-  mmm::algorithmTest::testAll();
-  mmm::DequeTest::testAll();
-  mmm::ListTest::testAll();
-  mmm::PriorityQueueTest::testAll();
-  mmm::QueueTest::testAll();
-  mmm::StackTest::testAll();
-  mmm::VectorTest::testAll();
+  // mmm::algorithmTest::testAll();
+  // mmm::DequeTest::testAll();
+  // mmm::ListTest::testAll();
+  // mmm::PriorityQueueTest::testAll();
+  // mmm::QueueTest::testAll();
+  // mmm::StackTest::testAll();
+  // mmm::VectorTest::testAll();
+  mmm::deque<int> a;
+  int aaa = 1;
+  a.push_back(aaa);
+
   std::cout << "finish test" << std::endl;
 }

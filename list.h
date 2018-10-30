@@ -45,6 +45,10 @@ public:
   //   return *this;
   // }
 
+  node_ptr& prev() { return p->prev;}
+  node_ptr& next() { return p->next;}
+
+  node_ptr& operator()() {return p;}
   self &operator++() {
     p = p->next;
     return *this;
@@ -274,10 +278,10 @@ typename list<T, Allocator>::iterator
 list<T, Allocator>::insert(iterator position, const value_type &val) {
   //修改四个指针
   auto tmp = create_node(val);
-  tmp->next = position.p;
-  tmp->prev = position.p->prev;
-  position.p->prev->next = tmp;
-  position.p->prev = tmp;
+  tmp->next = position();
+  tmp->prev = position.prev();
+  position.prev()->next = tmp;
+  position.prev() = tmp;
   return tmp;
 }
 
@@ -310,10 +314,10 @@ list<T, Allocator> &list<T, Allocator>::operator=(const list &l) {
 template <class T, class Allocator>
 typename list<T, Allocator>::iterator
 list<T, Allocator>::erase(iterator position) {
-  auto ret = position.p->next;
-  position.p->next->prev = position.p->prev;
-  position.p->prev->next = position.p->next;
-  delete_node(position.p);
+  auto ret = position.next();
+  position.next()->prev = position.prev();
+  position.prev()->next = position.next();
+  delete_node(position());
   return ret;
 }
 template <class T, class Allocator>
@@ -363,12 +367,12 @@ void list<T, Allocator>::transfer(const_iterator position, const_iterator first,
   first.p->prev->next = last.p;
   last.p->prev = first.p->prev;
 
-  auto prev_node = position.p->prev;
+  auto prev_node = position.prev();
   prev_node->next = first.p;
   first.p->prev = prev_node;
 
-  last_node->next = position.p;
-  position.p->prev = last_node;
+  last_node->next = position();
+  position.prev() = last_node;
 }
 
 // splice
