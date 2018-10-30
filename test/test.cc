@@ -664,8 +664,8 @@ void testCase5() {
   foo.push(10);
   bar.push(101);
   bar.push(202);
-
   assert(foo.size() == 3 && bar.size() == 2);
+
   foo.swap(bar);
   assert(foo.size() == 2 && bar.size() == 3);
 
@@ -696,14 +696,7 @@ void testCase1() {
     q2.pop();
   }
 }
-void testCase2() {
-  mmm::queue<int> q1;
-  for (auto i = 0; i != 10; ++i)
-    q1.push(i);
-  auto q2(q1);
-  assert(q1 == q2);
-  assert(!(q1 != q2));
-}
+
 void testCase3() {
   mmm::queue<int> q;
   assert(q.empty());
@@ -740,7 +733,7 @@ void testCase5() {
 
 void testAll() {
   testCase1();
-  testCase2();
+
   testCase3();
   testCase4();
   testCase5();
@@ -771,14 +764,6 @@ void testCase2() {
   assert(!st.empty());
   assert(st.size() == 2);
 }
-void testCase3() {
-  mmm::stack<int> st1;
-  for (auto i = 0; i != 5; ++i)
-    st1.push(i);
-  auto st2(st1);
-  assert(st1 == st2);
-  assert(!(st1 != st2));
-}
 void testCase4() {
   mmm::stack<int> st1, st2;
   st1.push(1);
@@ -796,7 +781,6 @@ void testCase4() {
 void testAll() {
   testCase1();
   testCase2();
-  testCase3();
   testCase4();
 }
 } // namespace StackTest

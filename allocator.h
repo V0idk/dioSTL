@@ -4,6 +4,7 @@
 #include "alloc.h"
 #include "construct.h"
 #include <new>
+#include <stdlib.h>
 
 namespace mmm{
 
@@ -27,21 +28,25 @@ namespace mmm{
 
 	template<class T>
 	T *allocator<T>::allocate(){
-		return static_cast<T *>(alloc::allocate(sizeof(T)));
+		// return static_cast<T *>(alloc::allocate(sizeof(T)));
+		return (T*)malloc(sizeof(T));
 	}
 	template<class T>
 	T *allocator<T>::allocate(size_t n){
 		if (n == 0) return 0;
-		return static_cast<T *>(alloc::allocate(sizeof(T) * n));
+		// return static_cast<T *>(alloc::allocate(sizeof(T) * n));
+		return (T*)malloc(sizeof(T) * n);
 	}
 	template<class T>
 	void allocator<T>::deallocate(T *ptr){
-		alloc::deallocate(static_cast<void *>(ptr), sizeof(T));
+		// alloc::deallocate(static_cast<void *>(ptr), sizeof(T));
+		free(ptr);
 	}
 	template<class T>
 	void allocator<T>::deallocate(T *ptr, size_t n){
 		if (n == 0) return;
-		alloc::deallocate(static_cast<void *>(ptr), sizeof(T)* n);
+		// alloc::deallocate(static_cast<void *>(ptr), sizeof(T)* n);
+		free(ptr);
 	}
 }
 

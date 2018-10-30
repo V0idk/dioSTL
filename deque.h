@@ -178,6 +178,12 @@ public:
     deque_aux(first, last, is_integer<InputIterator>());
   }
   deque(const deque &x);
+  deque( deque&& other ): deque() {
+    begin_.swap(other.begin_);
+    end_.swap(other.end_);
+    mmm::swap(map_,other.map_);
+    mmm::swap(map_len,other.map_len);
+  }
 
   ~deque();
 

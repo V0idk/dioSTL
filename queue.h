@@ -19,9 +19,14 @@ private:
   Container container_;
 
 public:
-  queue() {}
+  queue() { }
   explicit queue(const container_type &ctnr) : container_(ctnr) {}
-
+  queue( const queue& other ):queue() {
+    container_ = other.container_;
+  }
+  queue( queue&& other ): queue() {
+    container_.swap(other.container_);
+  }
   bool empty() const { return container_.empty(); }
   size_type size() const { return container_.size(); }
   reference &front() { return container_.front(); }
@@ -99,8 +104,13 @@ private:
   Compare compare_;
 
 public:
-  explicit priority_queue(const Compare &comp = Compare(),
-                          const Container &ctnr = Container())
+  priority_queue() : priority_queue(Compare(), Container()) { }
+
+  explicit priority_queue(const Compare& compare) 
+      : priority_queue(compare, Container()) { }
+
+  explicit priority_queue(const Compare &comp,
+                          const Container &ctnr)
       : container_(ctnr), compare_(comp) {}
   template <class InputIterator>
   priority_queue(InputIterator first, InputIterator last,
@@ -123,7 +133,8 @@ public:
     container_.pop_back();
   }
   void swap(priority_queue &x) {
-    mmm::swap(container_, x.container_);
+    container_.swap(x.container_);
+    // mmm::swap(container_, x.container_);
     mmm::swap(compare_, x.compare_);
   }
 };
