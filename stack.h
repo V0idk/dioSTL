@@ -18,7 +18,8 @@ private:
   container_type container_;
 
 public:
-  explicit stack(const container_type &ctnr = container_type())
+  stack() { }
+  explicit stack(const container_type &ctnr)
       : container_(ctnr) {}
 
   bool empty() const { return container_.empty(); }

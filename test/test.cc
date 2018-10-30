@@ -1064,16 +1064,12 @@ void testAll() {
 
 int main() {
   std::cout << "start test" << std::endl;
-  // mmm::algorithmTest::testAll();
-  // mmm::DequeTest::testAll();
-  // mmm::ListTest::testAll();
-  // mmm::PriorityQueueTest::testAll();
-  // mmm::QueueTest::testAll();
-  // mmm::StackTest::testAll();
-  // mmm::VectorTest::testAll();
-  mmm::deque<int> a;
-  int aaa = 1;
-  a.push_back(aaa);
-
+  mmm::VectorTest::testAll();
+  mmm::DequeTest::testAll();
+  mmm::PriorityQueueTest::testAll();
+  mmm::QueueTest::testAll();
+  mmm::StackTest::testAll();
+  mmm::ListTest::testAll();
+  mmm::algorithmTest::testAll();
   std::cout << "finish test" << std::endl;
 }

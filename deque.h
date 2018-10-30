@@ -232,18 +232,16 @@ private:
   void enlarge_map();
 
 	void release_map(){
-    for (size_t i = 0; i != map_len; ++i) {
-      if (map_[i])
+    for (size_t i = 0; i != map_len; ++i) 
         dataAllocator::deallocate(map_[i], deque_buf_len());
-    }
-    dataAllocator::deallocate((T *)map_,map_len*sizeof(T*));
+    allocator<T*>::deallocate(map_,map_len);
 	}
 }; // end of deque
 
 template <class T, class Alloc>
 T **deque<T, Alloc>::get_new_map(const size_t size) {
   // T **map = new T *[size];
-  T **map = (T**)dataAllocator::allocate(size*sizeof(T*));
+  T **map = allocator<T*>::allocate(size);
   for (size_t i = 0; i != size; ++i)
     map[i] = dataAllocator::allocate(deque_buf_len());
   return map;
@@ -299,7 +297,8 @@ template <class T, class Alloc> void deque<T, Alloc>::enlarge_map() {
 }
 template <class T, class Alloc>
 bool deque<T, Alloc>::is_reach_map_tail() const {
-  return map_[map_len] == end().cur_;
+  // return map_[map_len] == end().cur_;
+  return &map_[map_len] == end().map_;
 }
 template <class T, class Alloc>
 bool deque<T, Alloc>::is_reach_map_head() const {
@@ -342,11 +341,14 @@ void deque<T, Alloc>::deque_aux(Iterator first, Iterator last, false_type) {
     push_back(*it);
 }
 template <class T, class Alloc> void deque<T, Alloc>::clear() {
-  for (size_t i = 0; i != map_len; ++i) {
-    for (auto p = map_[i]; !p && p != map_[i] + deque_buf_len(); ++p)
-      mmm::destroy(p);
-  }
-  map_len = 0;
+  for (auto cur = begin(); cur != end(); ++cur) 
+    mmm::destroy(cur.cur_);
+
+  // for (size_t i = 0; i != map_len; ++i) {
+  //   for (auto p = map_[i]; !p && p != map_[i] + deque_buf_len(); ++p)
+  //     mmm::destroy(p);
+  // }
+
   //指向中间
   begin_.set_map(&map_[map_len / 2]);
   end_.set_map(&map_[map_len / 2]);
@@ -354,14 +356,19 @@ template <class T, class Alloc> void deque<T, Alloc>::clear() {
 }
 
 template <class T, class Alloc> deque<T, Alloc>::~deque() {
-  for (size_t i = 0; i != map_len; ++i) {
-    for (auto p = map_[i] + 0; !p && p != map_[i] + deque_buf_len(); ++p)
-      mmm::destroy(p);
-    if (map_[i])
-      dataAllocator::deallocate(map_[i], deque_buf_len());
-  }
+  clear();
+  for (size_t i = 0; i != map_len; ++i)
+    dataAllocator::deallocate(map_[i], deque_buf_len());
+
+  // for (size_t i = 0; i != map_len; ++i) {
+  //   for (auto p = map_[i] + 0; !p && p != map_[i] + deque_buf_len(); ++p)
+  //     mmm::destroy(p);
+  //   if (map_[i]){
+  //     dataAllocator::deallocate(map_[i], deque_buf_len());
+  //   }
+  // }
   //delete[] map_;
-  dataAllocator::deallocate((T *)map_,map_len*sizeof(T*));
+  allocator<T*>::deallocate(map_,map_len);
 }
 
 template <class T, class Alloc> void deque<T, Alloc>::swap(deque<T, Alloc> &x) {
