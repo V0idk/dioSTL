@@ -47,29 +47,25 @@ class vector{
 	vector(const vector& other){
 		range_initialize(other.start_, other.finish_);
 	}
-	vector(vector&& other){
-		start_ = other.start_;
-		finish_ = other.finish_;
-		end_of_storage_ = other.end_of_storage_;
-		other.start_ = other.finish_ = other.end_of_storage_ = 0;
+	vector(vector&& other) : vector()  {
+		// start_ = other.start_;
+		// finish_ = other.finish_;
+		// end_of_storage_ = other.end_of_storage_;
+		// other.start_ = other.finish_ = other.end_of_storage_ = 0;
+		this->swap(other);
 	}
 	vector( std::initializer_list<T> init){
 		range_initialize(init.begin(),init.end());
 	}
-	vector& operator = (const vector& other){
-		if (this != &other){
-			range_initialize(other.start_, other.finish_);
-		}
+
+	vector& operator=(const vector &other ) { 
+		vector tmp(other);
+		this->swap(tmp);;
 		return *this;
 	}
 	vector& operator = (vector&& other){
-		if (this != &other){
-			release_vector();
-			start_ = other.start_;
-			finish_ = other.finish_;
-			end_of_storage_ = other.end_of_storage_;
-			other.start_ = other.finish_ = other.end_of_storage_ = 0;
-		}
+		if(&other != this)
+			this->swap(other);
 		return *this;
 	}
 	~vector(){
@@ -77,21 +73,21 @@ class vector{
 	}
 
 	//迭代器
-	iterator begin(){ return (start_); }
-	const_iterator begin()const{ return (start_); }
-	const_iterator cbegin()const{ return (start_); }
-	iterator end(){ return (finish_); }
-	const_iterator end()const{ return (finish_); }
-	const_iterator cend()const{ return (finish_); }
-	reverse_iterator rbegin(){ return reverse_iterator(finish_); }
-	const_reverse_iterator crbegin()const{ return const_reverse_iterator(finish_); }
-	reverse_iterator rend(){ return reverse_iterator(start_); }
-	const_reverse_iterator crend()const{ return const_reverse_iterator(start_); }
+	iterator begin() noexcept { return (start_); }
+	const_iterator begin() const noexcept{ return (start_); }
+	const_iterator cbegin() const noexcept{ return (start_); }
+	iterator end() noexcept { return (finish_); }
+	const_iterator end() const noexcept{ return (finish_); }
+	const_iterator cend() const noexcept{ return (finish_); }
+	reverse_iterator rbegin() noexcept { return reverse_iterator(finish_); }
+	const_reverse_iterator crbegin() const noexcept{ return const_reverse_iterator(finish_); }
+	reverse_iterator rend() noexcept { return reverse_iterator(start_); }
+	const_reverse_iterator crend() const noexcept { return const_reverse_iterator(start_); }
 
 	//容量
-	size_type size()const{ return finish_ - start_; }
-	size_type capacity()const{ return end_of_storage_ - start_; }
-	bool empty()const{ return start_ == finish_; }
+	size_type size() const noexcept { return finish_ - start_; }
+	size_type capacity() const noexcept { return end_of_storage_ - start_; }
+	bool empty() const noexcept { return start_ == finish_; }
 	void resize(size_type n, value_type val = value_type());
 	void reserve(size_type n);
 	void shrink_to_fit(){
@@ -126,7 +122,7 @@ class vector{
 		mmm::destroy(start_, finish_);
 		finish_ = start_;
 	}
-	void swap(vector& v){
+	void swap(vector& v) noexcept {
 		if (this != &v){
 			mmm::swap(start_, v.start_);
 			mmm::swap(finish_, v.finish_);

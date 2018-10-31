@@ -117,12 +117,18 @@ template <typename T, typename Ref, typename Ptr> struct deque_iterator {
   }
 
   void swap(iterator &other) {
-    mmm::swap(cur_, other.cur_);
-    mmm::swap(first_, other.first_);
-    mmm::swap(last_, other.last_);
-    mmm::swap(map_, other.map_);
+    using mmm::swap;
+    swap(cur_, other.cur_);
+    swap(first_, other.first_);
+    swap(last_, other.last_);
+    swap(map_, other.map_);
   }
 };
+
+template <typename T, typename Ref, typename Ptr>
+void swap(deque_iterator<T, Ref, Ptr> x, deque_iterator<T, Ref, Ptr> y){
+  x.swap(y);
+}
 
 template <typename T, typename Ref, typename Ptr>
 inline typename deque_iterator<T, Ref, Ptr>::difference_type
@@ -179,24 +185,35 @@ public:
   }
   deque(const deque &x);
   deque( deque&& other ): deque() {
-    begin_.swap(other.begin_);
-    end_.swap(other.end_);
-    mmm::swap(map_,other.map_);
-    mmm::swap(map_len,other.map_len);
+    this->swap(other);
   }
-
+  //https://stackoverflow.com/questions/3279543/what-is-the-copy-and-swap-idiom/3279550#3279550
+  //https://stackoverflow.com/questions/12651063/the-efficient-way-to-write-move-copy-and-move-assignment-constructors
+  //CAS减少代码重复
+  deque& operator=(const deque &other ) { //CAS. 规范接口. 不精简
+      deque tmp(other);
+      this->swap(tmp);;
+      return *this;
+  }
+  //https://stackoverflow.com/questions/9322174/move-assignment-operator-and-if-this-rhs
+  //http://www.vollmann.ch/en/blog/implementing-move-assignment-variations-in-c++.html
+  deque& operator=( deque&& other ) noexcept {
+      if (&other != this)
+        this->swap(other);
+      return *this;
+  }
   ~deque();
 
-  iterator begin() { return begin_; }
-  iterator end() { return end_; }
-  const_iterator begin() const { return begin_; }
-  const_iterator end() const { return end_; }
-  const_iterator cbegin() const { return begin_; }
-  const_iterator cend() const { return end_; }
+  iterator begin() noexcept { return begin_; }
+  iterator end() noexcept { return end_; }
+  const_iterator begin() const noexcept{ return begin_; }
+  const_iterator end() const noexcept { return end_; }
+  const_iterator cbegin() const noexcept { return begin_; }
+  const_iterator cend() const noexcept { return end_; }
 
 public:
-  size_type size() const { return end() - begin(); }
-  bool empty() const { return begin() == end(); }
+  size_type size() const noexcept { return end() - begin(); }
+  bool empty() const noexcept { return begin() == end(); }
 
   reference operator[](size_type n) { return *(begin() + n); }
   reference front() { return *begin(); }
@@ -218,7 +235,12 @@ public:
     mmm::destroy(begin_.cur_);
     ++begin_;
   }
-  void swap(deque &x);
+  void swap(deque &x) noexcept{
+    mmm::swap(map_len, x.map_len);
+    mmm::swap(map_, x.map_);
+    begin_.swap(x.begin_);
+    end_.swap(x.end_);
+  }
   void clear();
 
 private:
@@ -243,6 +265,16 @@ private:
     allocator<T*>::deallocate(map_,map_len);
 	}
 }; // end of deque
+
+
+//https://stackoverflow.com/questions/5695548/public-friend-swap-member-function
+//不要在类内friend swap<self>. 会导致签名冲突
+//注意gcc禁止内部定义friend, 而clang则允许
+//swap应该仅调用成员函数swap. 因为是类负责封装提供swap的语义
+template <class T, class Alloc>
+inline void swap(deque<T, Alloc>&x, deque<T, Alloc> &y) noexcept {
+    x.swap(y);
+}
 
 template <class T, class Alloc>
 T **deque<T, Alloc>::get_new_map(const size_t size) {
@@ -377,12 +409,6 @@ template <class T, class Alloc> deque<T, Alloc>::~deque() {
   allocator<T*>::deallocate(map_,map_len);
 }
 
-template <class T, class Alloc> void deque<T, Alloc>::swap(deque<T, Alloc> &x) {
-  mmm::swap(map_len, x.map_len);
-  mmm::swap(map_, x.map_);
-  begin_.swap(x.begin_);
-  end_.swap(x.end_);
-}
 
 template <class T, class Alloc>
 bool operator==(const deque<T, Alloc> &x, const deque<T, Alloc> &y) {
@@ -398,10 +424,6 @@ bool operator==(const deque<T, Alloc> &x, const deque<T, Alloc> &y) {
 template <class T, class Alloc>
 inline bool operator!=(const deque<T, Alloc> &x, const deque<T, Alloc> &y) {
   return !(x == y);
-}
-template <class T, class Alloc>
-inline void swap(deque<T, Alloc> &x, deque<T, Alloc> &y) {
-  x.swap(y);
 }
 
 template <typename T, typename Alloc>

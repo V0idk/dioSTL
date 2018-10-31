@@ -110,36 +110,56 @@ public:
 	}
 
   list(const list &other);
-  list &operator=(const list &l);
+  list &operator=(list other){
+    this->swap(other);
+    return *this;
+  }
   ~list(){
 		erase(begin(), end());
 		erase(end());
 	}
+  list( list&& other ): list() {
+    this->swap(other);
+  }
+  list& operator=( list&& other ) noexcept {
+      if (&other == this)
+          return *this;
+      this->swap(other);
+      return *this;
+  }
 
-  bool empty() const { return head->next == head; }
-  size_type size() const;
+public:
+  bool empty() const noexcept { return head->next == head; }
+  size_type size() const noexcept;
 
-  iterator begin() { //若容器为空，则返回的迭代器将等于end() 。
+  iterator begin() noexcept { //若容器为空，则返回的迭代器将等于end() 。
 		return head->next;
 	} 
-  iterator end() { return head; }
+  iterator end() noexcept { return head; }
 
-  const_iterator begin() const { ;
+  const_iterator begin() const noexcept { ;
 		return const_iterator(head->next);
 	}
-	const_iterator cbegin(){
+	const_iterator cbegin() const noexcept {
 		return const_iterator(head->next);
 	}
-  const_iterator end() const { 
+  const_iterator end() const noexcept { 
 		return const_iterator(head);
 	}
-  reverse_iterator rbegin() { return reverse_iterator(head); }
-  reverse_iterator rend() { return reverse_iterator(head->next); }
+  reverse_iterator rbegin() noexcept { return reverse_iterator(head); }
+  reverse_iterator rend() noexcept { return reverse_iterator(head->next); }
+
+  const_reverse_iterator rbegin() const noexcept { return const_reverse_iterator(head); }
+  const_reverse_iterator rend() const noexcept { return const_reverse_iterator(head->next); }
+  const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(head); }
+  const_reverse_iterator crend() const noexcept { return const_reverse_iterator(head->next);}
 
   //在空容器上对 front/back 的调用是未定义的(cpprefernce)。
 	//程序的正确性应是使用者的逻辑正确性.而非库
-  reference front() { return *begin(); }
-  reference back() { return *(--end()); }
+  reference front() noexcept  { return *begin(); }
+  const_iterator front() const noexcept  { return *begin(); }
+  reference back() noexcept { return *(--end()); }
+  const_iterator back() const noexcept { return *(--end()); }
 
   void push_front(const value_type &val) { insert(begin(), val);}
   void pop_front() {erase(begin());}
@@ -157,7 +177,7 @@ public:
 	}
   iterator erase(iterator position);
   iterator erase(iterator first, iterator last);
-  void swap(list &x);
+  void swap(list &x) noexcept ;
   void clear(){
 		erase(begin(), end());
 	}
@@ -190,10 +210,13 @@ private:
   void delete_node(node_ptr p);
   const_iterator changeIteratorToConstIterator(iterator &it) const;
 
-public:
-  template <class T1, class Allocator1>
-  friend void swap(list<T1, Allocator> &x, list<T1, Allocator> &y) {x.swap(y);} 
+
 }; // end of List
+
+template <class T, class Allocator>
+inline void swap(list<T, Allocator> &x, list<T, Allocator> &y) noexcept {
+  x.swap(y);
+}
 
 //比较操作符
 template <class T, class Allocator>
@@ -228,7 +251,7 @@ void list<T, Allocator>::delete_node(node_ptr p) {
 
 //size
 template <class T, class Allocator>
-typename list<T, Allocator>::size_type list<T, Allocator>::size() const {
+typename list<T, Allocator>::size_type list<T, Allocator>::size() const noexcept {
   size_type length = 0;
   for (auto h = head->next; h != head; h = h->next)
     ++length;
@@ -301,13 +324,7 @@ void list<T, Allocator>::insert_aux(iterator position, InputIterator first, Inpu
 }
 
 // push/pop
-template <class T, class Allocator>
-list<T, Allocator> &list<T, Allocator>::operator=(const list &l) {
-  if (this != &l) {
-    list(l).swap(*this); //见友元
-  }
-  return *this;
-}
+
 //返回被删除的的迭代器后面的迭代器
 //注意,不负责检查参数的合法性.因为如果erase一个空链表,属于使用者的逻辑错误,而非STL本身.
 //没有必要隐藏这种错误. 与cppference一致
@@ -349,7 +366,7 @@ void list<T, Allocator>::remove_if(UnaryPredicate pred) {
       ++it;
   }
 }
-template <class T, class Allocator> void list<T, Allocator>::swap(list &x) {
+template <class T, class Allocator> void list<T, Allocator>::swap(list &x) noexcept {
   node_ptr tmp = x.head;
   x.head = this->head;
   this->head = tmp;
@@ -466,7 +483,7 @@ void list<T, Allocator>::sort(Compare comp) {
     q = begin();
   }
   //将tmp赋给本list
-  swap(tmp);
+  this->swap(tmp);
 }
 
 } // namespace mmm
