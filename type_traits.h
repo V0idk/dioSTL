@@ -306,6 +306,25 @@ using is_pod = typename _type_traits<_Tp>::is_POD_type::type;
 
 template<typename _Tp>
 using is_integer = typename _type_traits<_Tp>::is_integer_type::type;
+
+template <bool bCondition, class ConditionIsTrueType, class ConditionIsFalseType>
+struct type_select { typedef ConditionIsTrueType type; };
+
+template <typename ConditionIsTrueType, class ConditionIsFalseType>
+struct type_select<false, ConditionIsTrueType, ConditionIsFalseType> { typedef ConditionIsFalseType type; };
+
+template<bool B, class T = void>
+struct enable_if {};
+ 
+template<class T>
+struct enable_if<true, T> { typedef T type; };
+
+
+template< class T > struct remove_reference      {typedef T type;};
+template< class T > struct remove_reference<T&>  {typedef T type;};
+template< class T > struct remove_reference<T&&> {typedef T type;};
+
+
 }//namespace mmm
 
 

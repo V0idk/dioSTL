@@ -26,6 +26,7 @@ class vector{
 	typedef size_t								size_type;
 	typedef ptrdiff_t	            difference_type;
  private:
+	
 	pointer start_;
 	pointer finish_;
 	pointer end_of_storage_;

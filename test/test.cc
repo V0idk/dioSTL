@@ -6,13 +6,15 @@
 #include "../construct.h"
 #include "../deque.h"
 #include "../list.h"
+#include "../map.h"
 #include "../mycstring.h"
 #include "../queue.h"
+#include "../rbtree.h"
+#include "../set.h"
 #include "../stack.h"
 #include "../uninitialized.h"
 #include "../utility.h"
 #include "../vector.h"
-#include "../alloc.h"
 
 #include <algorithm>
 #include <cassert>
@@ -30,14 +32,14 @@
 
 namespace mmm {
 
-//https://stackoverflow.com/questions/34052948/printing-any-stl-container
+// https://stackoverflow.com/questions/34052948/printing-any-stl-container
 // template<typename T>
-// std::ostream& print(std::ostream &out, T const &val) { 
+// std::ostream& print(std::ostream &out, T const &val) {
 //   return (out << val << " ");
 // }
 
 // template<typename T1, typename T2>
-// std::ostream& print(std::ostream &out, std::pair<T1, T2> const &val) { 
+// std::ostream& print(std::ostream &out, std::pair<T1, T2> const &val) {
 //   return (out << "{" << val.first << " " << val.second << "} ");
 // }
 
@@ -46,7 +48,6 @@ namespace mmm {
 //   for(auto&& elem : cont) print(out, elem);
 //   return out;
 // }
-
 
 template <class Container1, class Container2>
 bool container_equal(Container1 &&con1, Container2 &&con2) {
@@ -59,12 +60,11 @@ bool container_equal(Container1 &&con1, Container2 &&con2) {
   return (first1 == last1 && first2 == last2);
 }
 
-template <class Container>
-void print_container(Container &&c) {
+template <class Container> void print_container(Container &&c) {
   auto first = mmm::begin(c);
   auto last = mmm::end(c);
   for (; first != last; ++first) {
-    std::cout<< *first << " ";
+    std::cout << *first << " ";
   }
   std::cout << std::endl;
 }
@@ -171,43 +171,39 @@ void testHeap() {
   assert(mmm::container_equal(v1, v2));
 }
 
-
-void testQuicksort(){
+void testQuicksort() {
   int myints[] = {10, 20, 30, 5, 15, 21, 43, 53, 2, 5, 332, 34, 23};
   mmm::vector<int> v1(myints, myints + 13);
   mmm::vector<int> v2(myints, myints + 13);
-  std::sort(v2.begin(),v2.end());
+  std::sort(v2.begin(), v2.end());
   mmm::quicksort(v1.begin(), v1.end());
   assert(mmm::container_equal(v1, v2));
 }
 
-void testbubblesort(){
+void testbubblesort() {
   int myints[] = {10, 20, 30, 5, 15, 21, 43, 53, 2, 5, 332, 34, 23};
   mmm::vector<int> v1(myints, myints + 13);
   mmm::vector<int> v2(myints, myints + 13);
-  std::sort(v2.begin(),v2.end(),std::greater<int>());
+  std::sort(v2.begin(), v2.end(), std::greater<int>());
   mmm::bubblesort(v1.begin(), v1.end(), mmm::greater<int>());
   assert(mmm::container_equal(v1, v2));
 }
 
-
-void testselectionsort(){
+void testselectionsort() {
   int myints[] = {10, 20, 30, 5, 15, 21, 43, 53, 2, 5, 332, 34, 23};
   mmm::vector<int> v1(myints, myints + 13);
   mmm::vector<int> v2(myints, myints + 13);
-  std::sort(v2.begin(),v2.end(),std::greater<int>());
+  std::sort(v2.begin(), v2.end(), std::greater<int>());
   mmm::selectionsort(v1.begin(), v1.end(), mmm::greater<int>());
   assert(mmm::container_equal(v1, v2));
 }
 
-
-
-void testinsertionsort(){
+void testinsertionsort() {
   int myints[] = {10, 20, 30, 5, 15, 21, 43, 53, 2, 5, 332, 34, 23};
   mmm::vector<int> v1(myints, myints + 13);
   mmm::vector<int> v2(myints, myints + 13);
   mmm::insertionsort(v1.begin(), v1.end());
-  std::sort(v2.begin(),v2.end());
+  std::sort(v2.begin(), v2.end());
   assert(mmm::container_equal(v1, v2));
 }
 
@@ -250,7 +246,7 @@ void testCase1() {
   assert(mmm::container_equal(dq9, dq10));
 
   // test <
-  assert(dq1 < dq5 == dq2 < dq6);
+  assert((dq1 < dq5) == (dq2 < dq6));
 }
 void testCase2() {
   mmm::deque<int> dq1;
@@ -847,13 +843,13 @@ void testCase4() {
   }
 
   i = 1;
-  for (mmm::vector<int>::const_iterator it = myvector.cbegin(); it != myvector.cend();
-       ++it, ++i) {
+  for (mmm::vector<int>::const_iterator it = myvector.cbegin();
+       it != myvector.cend(); ++it, ++i) {
     assert(*it == i);
   }
 }
 void testCase5() {
-  mmm::vector<int> myvector(5); 
+  mmm::vector<int> myvector(5);
   int i = 0;
   mmm::vector<int>::reverse_iterator rit = myvector.rbegin();
   for (; rit != myvector.rend(); ++rit)
@@ -920,7 +916,7 @@ void testCase9() {
   assert(mmm::container_equal(v1, v2));
 }
 void testCase10() {
-  mmm::vector<int> foo(3, 100); 
+  mmm::vector<int> foo(3, 100);
   mmm::vector<int> bar(2, 200);
 
   std::vector<int> a{100, 100, 100};
@@ -1044,6 +1040,88 @@ void testAll() {
 }
 } // namespace VectorTest
 
+namespace RbtreeTest {
+void testCase1() {
+  mmm::less<int> comp;
+  // rb_tree<int, int, identity<int>, mmm::less<int>> r1(comp);
+  rbtree<int, int, mmm::less<int>, mmm::allocator<rbtree_node<int>>,
+         mmm::identity<int>, false, true>
+      r1;
+  std::set<int, mmm::less<int>> s1(comp);
+
+  std::random_device rd;
+  for (auto i = 0; i != 10000; ++i) {
+    int ret = rd() % 999999;
+    r1.insert(ret);
+    s1.insert(ret);
+  }
+  r1.insert(99);
+  s1.insert(99);
+
+  for (auto i = 0; i != 100; ++i) {
+    int ret = rd() % 999999;
+    if (r1.find(ret) != r1.end())
+      r1.erase(r1.find(ret));
+    if (s1.find(ret) != s1.end())
+      s1.erase(s1.find(ret));
+  }
+
+  assert(mmm::container_equal(r1, s1));
+}
+void testAll() { testCase1(); }
+
+} // namespace RbtreeTest
+
+namespace SetTest {
+void testCase1() {
+  int ia[5] = {0, 1, 3, 6, 2};
+  mmm::set<int> myset(ia, ia + 5);
+  std::set<int> stdset(ia, ia + 5);
+  myset.insert(4);
+  myset.insert(10);
+  stdset.insert(4);
+  stdset.insert(10);
+  assert(mmm::container_equal(myset, stdset));
+  auto it1 = myset.find(3);
+  auto it2 = stdset.find(3);
+  assert(*it1 == *it2);
+
+  std::random_device rd;
+  for (auto i = 0; i != 10000; ++i) {
+    int ret = rd() % 999999;
+    myset.insert(ret);
+    stdset.insert(ret);
+  }
+  myset.insert(99);
+  stdset.insert(99);
+
+  for (auto i = 0; i != 100; ++i) {
+    int ret = rd() % 999999;
+    if (myset.find(ret) != myset.end())
+      myset.erase(myset.find(ret));
+    if (stdset.find(ret) != stdset.end())
+      stdset.erase(stdset.find(ret));
+  }
+}
+void testAll() { testCase1(); }
+} // namespace SetTest
+
+namespace MapTest {
+using string = std::string;
+void testCase1() {
+  mmm::map<string, int> mymap;
+  mymap["aaa"] = 1;
+  mymap["bbb"] = 2;
+  mymap["ccc"] = 3;
+  const mmm::pair<const string, int> value1(string("ddd"), 4);
+  mymap.insert(value1);
+  assert(mymap["ddd"] == 4);
+  auto iter = mymap.find("ddd");
+  assert(*iter == value1);
+}
+void testAll() { testCase1(); }
+} // namespace MapTest
+
 } // namespace mmm
 
 int main() {
@@ -1055,5 +1133,10 @@ int main() {
   mmm::StackTest::testAll();
   mmm::ListTest::testAll();
   mmm::algorithmTest::testAll();
+  mmm::RbtreeTest::testAll();
+
+  mmm::SetTest::testAll();
+  mmm::MapTest::testAll();
+
   std::cout << "finish test" << std::endl;
 }
